@@ -36,7 +36,7 @@ Educational automation platform demonstrating CS2 skin trading mechanics through
 <!-- GitHub Tasks linked here by github-sync workflow -->
 
 ### Story #8: Docker Infrastructure & Project Setup
-- [TASK-001: Initialize pnpm workspace with TypeScript configuration](https://github.com/ciekawy/cs-tradeup-automation/issues/12) (Story: #8)
+- ✅ [TASK-001: Initialize pnpm workspace with TypeScript configuration](https://github.com/ciekawy/cs-tradeup-automation/issues/12) (Story: #8) - **COMPLETE** (890b15f)
 - [TASK-002: Create Docker infrastructure (Dockerfile + docker-compose)](https://github.com/ciekawy/cs-tradeup-automation/issues/13) (Story: #8)
 - [TASK-003: Setup development tooling and documentation](https://github.com/ciekawy/cs-tradeup-automation/issues/14) (Story: #8)
 
