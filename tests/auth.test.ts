@@ -6,7 +6,8 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AuthenticationService, AuthenticationError, createAuthenticatedClient } from '../src/auth';
+import { AuthenticationService, createAuthenticatedClient } from '../src/auth';
+import { AuthenticationError, TwoFactorError } from '../src/auth/errors';
 import SteamUser from 'steam-user';
 import SteamTotp from 'steam-totp';
 
@@ -19,6 +20,11 @@ vi.mock('steam-totp', () => ({
     generateAuthCode: vi.fn(),
   },
 }));
+
+// Shared test configuration to avoid repetition
+const TEST_AUTHENTICATION_CONFIG = {
+  rateLimiter: { volumeFilePath: '/tmp/test-volume.json' },
+};
 
 describe('Authentication Service', () => {
   let mockSteamUser: any;
@@ -48,16 +54,24 @@ describe('Authentication Service', () => {
     process.env.STEAM_SHARED_SECRET = 'test_shared_secret';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // Clean up environment variables
     delete process.env.STEAM_USERNAME;
     delete process.env.STEAM_PASSWORD;
     delete process.env.STEAM_SHARED_SECRET;
+
+    // Reset rate limiter state to prevent test contamination
+    const fs = await import('fs/promises');
+    try {
+      await fs.unlink('/tmp/test-volume.json');
+    } catch {
+      // File might not exist, ignore
+    }
   });
 
   describe('Constructor', () => {
     it('should create instance with environment variables', () => {
-      const service = new AuthenticationService();
+      const service = new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
       expect(service).toBeInstanceOf(AuthenticationService);
       expect(SteamUser).toHaveBeenCalledOnce();
     });
@@ -65,8 +79,10 @@ describe('Authentication Service', () => {
     it('should throw error if username is missing', () => {
       delete process.env.STEAM_USERNAME;
 
-      expect(() => new AuthenticationService()).toThrow(AuthenticationError);
-      expect(() => new AuthenticationService()).toThrow(
+      expect(() => new AuthenticationService(TEST_AUTHENTICATION_CONFIG)).toThrow(
+        AuthenticationError
+      );
+      expect(() => new AuthenticationService(TEST_AUTHENTICATION_CONFIG)).toThrow(
         'STEAM_USERNAME and STEAM_PASSWORD environment variables are required'
       );
     });
@@ -74,11 +90,13 @@ describe('Authentication Service', () => {
     it('should throw error if password is missing', () => {
       delete process.env.STEAM_PASSWORD;
 
-      expect(() => new AuthenticationService()).toThrow(AuthenticationError);
+      expect(() => new AuthenticationService(TEST_AUTHENTICATION_CONFIG)).toThrow(
+        AuthenticationError
+      );
     });
 
     it('should setup event handlers on construction', () => {
-      new AuthenticationService();
+      new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
 
       // Verify event handlers were registered
       expect(mockSteamUser.on).toHaveBeenCalledWith('loggedOn', expect.any(Function));
@@ -92,6 +110,7 @@ describe('Authentication Service', () => {
         maxRetries: 3,
         retryDelayMin: 1000,
         retryDelayMax: 5000,
+        rateLimiter: { volumeFilePath: '/tmp/test-volume.json' },
       };
 
       const service = new AuthenticationService(config);
@@ -101,7 +120,7 @@ describe('Authentication Service', () => {
 
   describe('Authentication Flow', () => {
     it('should authenticate successfully with valid credentials', async () => {
-      const service = new AuthenticationService();
+      const service = new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
 
       // Setup mock to simulate successful login
       mockSteamUser.once.mockImplementation((event: string, callback: Function) => {
@@ -141,7 +160,7 @@ describe('Authentication Service', () => {
         }
       });
 
-      new AuthenticationService();
+      new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
 
       // Verify steamGuard handler was registered
       expect(mockSteamUser.on).toHaveBeenCalledWith('steamGuard', expect.any(Function));
@@ -155,16 +174,17 @@ describe('Authentication Service', () => {
       mockSteamUser.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'steamGuard') {
           setTimeout(() => {
-            expect(() => callback('domain.com', vi.fn())).toThrow(AuthenticationError);
+            expect(() => callback('domain.com', vi.fn())).toThrow(TwoFactorError);
           }, 0);
         }
       });
 
-      new AuthenticationService();
+      new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
     });
 
     it('should retry on network errors with exponential backoff', async () => {
       const service = new AuthenticationService({
+        ...TEST_AUTHENTICATION_CONFIG,
         maxRetries: 3,
         retryDelayMin: 10, // Very short delays for testing
         retryDelayMax: 50,
@@ -202,6 +222,7 @@ describe('Authentication Service', () => {
 
     it('should enforce human-paced delays between retries', async () => {
       const service = new AuthenticationService({
+        ...TEST_AUTHENTICATION_CONFIG,
         maxRetries: 2,
         retryDelayMin: 100,
         retryDelayMax: 200,
@@ -232,6 +253,7 @@ describe('Authentication Service', () => {
 
     it('should throw error after max retries exceeded', async () => {
       const service = new AuthenticationService({
+        ...TEST_AUTHENTICATION_CONFIG,
         maxRetries: 2,
         retryDelayMin: 50,
         retryDelayMax: 100,
@@ -250,6 +272,7 @@ describe('Authentication Service', () => {
 
     it('should handle login timeout', async () => {
       const service = new AuthenticationService({
+        ...TEST_AUTHENTICATION_CONFIG,
         maxRetries: 1,
         retryDelayMin: 50,
         retryDelayMax: 100,
@@ -267,12 +290,12 @@ describe('Authentication Service', () => {
 
   describe('State Management', () => {
     it('should report not authenticated initially', () => {
-      const service = new AuthenticationService();
+      const service = new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
       expect(service.isAuthenticated()).toBe(false);
     });
 
     it('should report authenticated after successful login', async () => {
-      const service = new AuthenticationService();
+      const service = new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
 
       mockSteamUser.once.mockImplementation((event: string, callback: Function) => {
         if (event === 'loggedOn') {
@@ -292,7 +315,7 @@ describe('Authentication Service', () => {
     });
 
     it('should provide authentication state', () => {
-      const service = new AuthenticationService();
+      const service = new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
       const state = service.getState();
 
       expect(state).toHaveProperty('isAuthenticated');
@@ -304,7 +327,7 @@ describe('Authentication Service', () => {
 
   describe('Disconnection', () => {
     it('should disconnect successfully', async () => {
-      const service = new AuthenticationService();
+      const service = new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
 
       // First authenticate the service
       mockSteamUser.once.mockImplementation((event: string, callback: Function) => {
@@ -333,7 +356,7 @@ describe('Authentication Service', () => {
     });
 
     it('should handle disconnect when not authenticated', async () => {
-      const service = new AuthenticationService();
+      const service = new AuthenticationService(TEST_AUTHENTICATION_CONFIG);
 
       await expect(service.disconnect()).resolves.toBeUndefined();
       expect(mockSteamUser.logOff).not.toHaveBeenCalled();
@@ -355,7 +378,7 @@ describe('Authentication Service', () => {
         }
       });
 
-      const service = await createAuthenticatedClient();
+      const service = await createAuthenticatedClient(TEST_AUTHENTICATION_CONFIG);
 
       expect(service).toBeInstanceOf(AuthenticationService);
       expect(service.isAuthenticated()).toBe(true);
@@ -376,6 +399,7 @@ describe('Authentication Service', () => {
       });
 
       const config = {
+        ...TEST_AUTHENTICATION_CONFIG,
         maxRetries: 3,
         retryDelayMin: 1000,
         retryDelayMax: 5000,

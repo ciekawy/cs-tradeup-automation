@@ -52,6 +52,91 @@ This is a living document where we capture:
 
 ## Active Entries
 
+### 2025-11-02: TASK-006 Rate Limiting & Error Handling Implementation
+
+**Context**: Implemented rate limiting and comprehensive error handling for authentication (RateLimiter class, custom error classes, jitter fix, graceful shutdown)
+
+**Learnings**:
+
+1. **100% Test Pass Rate Achieved**: All 98 tests passing after systematic debugging. Fixed critical jitter bug and test contamination issues.
+
+2. **CRITICAL LESSON: Don't Adjust Tests Without Investigation**:
+   - **Anti-Pattern**: Lowering test threshold from 100ms to 80ms to make test pass
+   - **Correct Approach**: Investigate implementation first - test revealed real bug
+   - **Root Cause**: Jitter calculation allowed delays below configured minimum (±20% jitter = 80-120ms range)
+   - **Fix**: Changed to additive jitter only (+0% to +20%) with `Math.max()` safety check
+   - **Principle**: Test failures often reveal real bugs, not test problems
+
+3. **Jitter Bug Discovery**: Original delay calculation defeated ban-prevention mechanism:
+   - **Buggy Code**: `delay = baseDelay + (Math.random() * jitter * 2 - jitter)` → 80-120ms range
+   - **Fixed Code**: `delay = Math.max(baseDelay + jitter, retryDelayMin)` → 100-120ms range
+   - **Impact**: Minimum delay now guaranteed, ban-prevention mechanism restored
+
+4. **Test Contamination Pattern**: Shared state across tests caused cascading failures:
+   - **Issue**: All auth tests shared `/tmp/test-volume.json` rate limiter file
+   - **Symptom**: After 10 auth attempts, remaining tests failed with `RateLimitError`
+   - **Fix**: Added `afterEach()` cleanup to delete shared volume file
+   - **Lesson**: Isolate test state to prevent contamination
+
+5. **Monthly Rotation Test Fix**: Incomplete test setup caused false failure:
+   - **Issue**: Test only updated `monthly.month` field, left `daily.date` unchanged
+   - **Result**: Daily rotation didn't trigger, counter stayed at 1 instead of 0
+   - **Fix**: Update BOTH `daily.date` and `monthly.month` when simulating month change
+   - **Lesson**: Date-based rotation tests need all related fields updated
+
+6. **Shared Test Configuration Pattern**: DRY principle for test fixtures:
+   - **Before**: Repeated `{ rateLimiter: { volumeFilePath: '/tmp/test-volume.json' } }` in every test
+   - **After**: Single `TEST_AUTHENTICATION_CONFIG` constant at file top
+   - **Benefit**: Easier maintenance, consistent configuration, clearer intent
+
+**Process Improvements**:
+
+- **Test-First Investigation Protocol**: When tests fail, investigate implementation before adjusting assertions
+- **Test Isolation Checklist**: Verify no shared state (files, counters, caches) across test runs
+- **Date Simulation Completeness**: When testing date-based logic, update ALL related date fields
+- **Test Refactoring**: Extract shared configuration constants to reduce duplication
+
+**Technical Decisions**:
+
+1. **Rate Limiter Design**:
+   - Daily/monthly volume tracking in `/data/volume.json`
+   - Automatic rotation (midnight for daily, 1st of month for monthly)
+   - Environment-configurable limits (default: 10 daily, 100 monthly)
+
+2. **Custom Error Classes**: Structured error hierarchy for clear error handling:
+   - `AuthenticationError` - Base auth failure (retryable flag)
+   - `RateLimitError` - Limits exceeded (includes stats for debugging)
+   - `SteamProtocolError` - Steam API errors (critical detection for graceful shutdown)
+   - `TwoFactorError` - 2FA required but unavailable
+   - `NetworkError` - Connectivity issues (always retryable)
+   - `SessionError` - Session management failures
+
+3. **Graceful Shutdown**: Critical Steam errors trigger `process.exit(1)` after cleanup:
+   - `AccountLogonDenied` - Permanent ban
+   - `AccountDisabled` - Account disabled
+   - `ServiceUnavailable` - Extended maintenance
+
+**Action Items**:
+
+- [x] RateLimiter class with volume tracking and automatic rotation
+- [x] Custom error classes with structured properties
+- [x] Integration with AuthenticationService (rate check before auth)
+- [x] Fixed jitter bug (additive only, enforced minimum)
+- [x] Comprehensive tests (17 rate limiter + 19 auth = 36 new tests)
+- [x] Fixed test contamination (afterEach cleanup)
+- [x] Fixed monthly rotation test (update all date fields)
+- [x] Refactored tests (shared configuration constant)
+- [x] Updated src/auth/SPEC.md with rate limiting and error handling docs
+- [x] 100% test pass rate achieved (98/98 tests)
+- [ ] **FUTURE**: Add metrics collection for rate limit usage patterns
+- [ ] **FUTURE**: Alert on approaching rate limits (e.g., 80% of daily limit)
+
+**Impact**: Authentication service now has robust rate limiting and error handling. Steam ban risk significantly reduced through volume tracking and human-paced delays. All error scenarios handled gracefully with clear error messages and appropriate retry strategies.
+
+**Key Retro Insight**: "Test failures are not the enemy - they're early warning signals. Fix the implementation, not the test threshold."
+
+---
+
 ### 2025-11-02: TASK-005 Session Persistence Implementation
 
 **Context**: Implemented session token management for persistent authentication across container restarts (SessionManager class, file-based persistence, automatic session restore)

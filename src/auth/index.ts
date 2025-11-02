@@ -1,6 +1,14 @@
 import SteamUser from 'steam-user';
 import SteamTotp from 'steam-totp';
 import { SessionManager, SessionData } from './SessionManager';
+import { RateLimiter, RateLimiterConfig } from './RateLimiter';
+import {
+  AuthenticationError as AuthError,
+  RateLimitError,
+  SteamProtocolError,
+  TwoFactorError,
+  wrapSteamError,
+} from './errors';
 
 /**
  * Authentication configuration interface
@@ -13,6 +21,7 @@ export interface AuthenticationConfig {
   retryDelayMin: number;
   retryDelayMax: number;
   sessionPath?: string; // Path to session file (default: /data/session.json)
+  rateLimiter?: RateLimiterConfig; // Rate limiter configuration
 }
 
 /**
@@ -29,6 +38,7 @@ export interface AuthenticationState {
 
 /**
  * Custom error class for authentication failures
+ * @deprecated Use error classes from ./errors.ts instead
  */
 export class AuthenticationError extends Error {
   constructor(
@@ -39,6 +49,17 @@ export class AuthenticationError extends Error {
     this.name = 'AuthenticationError';
   }
 }
+
+// Re-export error classes for convenience
+export {
+  AuthenticationError as AuthError,
+  RateLimitError,
+  SteamProtocolError,
+  NetworkError,
+  SessionError,
+  TwoFactorError,
+  wrapSteamError,
+} from './errors';
 
 /**
  * Steam Authentication Service
@@ -52,6 +73,7 @@ export class AuthenticationService {
   private config: AuthenticationConfig;
   private state: AuthenticationState;
   private sessionManager: SessionManager;
+  private rateLimiter: RateLimiter;
 
   constructor(config?: Partial<AuthenticationConfig>) {
     // Load configuration from environment variables with defaults
@@ -67,9 +89,7 @@ export class AuthenticationService {
 
     // Validate required credentials
     if (!this.config.username || !this.config.password) {
-      throw new AuthenticationError(
-        'STEAM_USERNAME and STEAM_PASSWORD environment variables are required'
-      );
+      throw new AuthError('STEAM_USERNAME and STEAM_PASSWORD environment variables are required');
     }
 
     // Initialize state
@@ -85,6 +105,9 @@ export class AuthenticationService {
 
     // Initialize session manager
     this.sessionManager = new SessionManager(config?.sessionPath || '/data/session.json');
+
+    // Initialize rate limiter
+    this.rateLimiter = new RateLimiter(config?.rateLimiter);
 
     // Setup event handlers
     this.setupEventHandlers();
@@ -120,7 +143,7 @@ export class AuthenticationService {
         callback(code);
       } else {
         // No shared secret available - user must provide code manually
-        const error = new AuthenticationError(
+        const error = new TwoFactorError(
           'Steam Guard 2FA code required. Please set STEAM_SHARED_SECRET environment variable or enter code manually.'
         );
         this.state.lastError = error;
@@ -131,8 +154,23 @@ export class AuthenticationService {
     // Handle errors
     this.client.on('error', (err) => {
       this.state.isAuthenticated = false;
-      this.state.lastError = err;
-      console.error('[Auth] Steam client error:', err.message);
+      const wrappedError = wrapSteamError(err);
+      this.state.lastError = wrappedError;
+
+      // Check if error is critical and requires graceful shutdown
+      if (wrappedError instanceof SteamProtocolError && wrappedError.isCritical()) {
+        console.error(
+          `[Auth] CRITICAL Steam error (${wrappedError.code}): ${wrappedError.message}`
+        );
+        console.error('[Auth] This error requires graceful shutdown. Exiting...');
+
+        // Gracefully shutdown
+        void this.disconnect(false).then(() => {
+          process.exit(1);
+        });
+      } else {
+        console.error('[Auth] Steam client error:', wrappedError.message);
+      }
     });
 
     // Handle disconnection
@@ -156,6 +194,22 @@ export class AuthenticationService {
    * @throws AuthenticationError if authentication fails after all retries
    */
   async authenticate(): Promise<void> {
+    // Initialize rate limiter
+    await this.rateLimiter.initialize();
+
+    // Check rate limits before attempting authentication
+    const limitExceeded = await this.rateLimiter.isLimitExceeded();
+    if (limitExceeded) {
+      const stats = await this.rateLimiter.getStats();
+      throw new RateLimitError(
+        'Authentication rate limit exceeded. Please try again later.',
+        stats.daily.limit,
+        stats.monthly.limit,
+        stats.daily.count,
+        stats.monthly.count
+      );
+    }
+
     // Try to restore session first (password-less reconnection)
     const sessionRestored = await this.tryRestoreSession();
     if (sessionRestored) {
@@ -165,6 +219,17 @@ export class AuthenticationService {
 
     // No valid session - proceed with full authentication
     console.log('[Auth] No valid session - proceeding with full authentication');
+
+    // Increment rate limit counter
+    try {
+      await this.rateLimiter.increment();
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        throw error;
+      }
+      console.warn('[Auth] Failed to increment rate limiter:', (error as Error).message);
+    }
+
     let lastError: Error | undefined;
 
     for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
@@ -180,14 +245,25 @@ export class AuthenticationService {
         this.state.retryCount = 0;
         return;
       } catch (error) {
-        lastError = error as Error;
-        console.error(`[Auth] Attempt ${attempt} failed:`, lastError.message);
+        const wrappedError = wrapSteamError(error);
+        lastError = wrappedError;
+        console.error(`[Auth] Attempt ${attempt} failed:`, wrappedError.message);
+
+        // Check if error is critical
+        if (wrappedError instanceof SteamProtocolError && wrappedError.isCritical()) {
+          console.error(
+            `[Auth] CRITICAL error (${wrappedError.code}): Cannot retry. Gracefully shutting down...`
+          );
+          await this.disconnect(false);
+          process.exit(1);
+        }
 
         // If this was the last attempt, throw the error
         if (attempt >= this.config.maxRetries) {
-          throw new AuthenticationError(
-            `Authentication failed after ${this.config.maxRetries} attempts: ${lastError.message}`,
-            lastError
+          throw new AuthError(
+            `Authentication failed after ${this.config.maxRetries} attempts: ${wrappedError.message}`,
+            wrappedError.code,
+            wrappedError
           );
         }
 
@@ -198,9 +274,10 @@ export class AuthenticationService {
           this.config.retryDelayMax
         );
 
-        // Add randomization to prevent pattern detection (±20%)
-        const jitter = baseDelay * 0.2;
-        const delay = baseDelay + (Math.random() * jitter * 2 - jitter);
+        // Add randomization to prevent pattern detection (+0% to +20%)
+        // IMPORTANT: Only add jitter, never subtract below minimum to ensure ban mitigation
+        const jitter = baseDelay * 0.2 * Math.random(); // 0 to 20% additive jitter
+        const delay = Math.max(baseDelay + jitter, this.config.retryDelayMin);
 
         console.log(
           `[Auth] CRITICAL: Implementing human-paced delay of ${Math.round(delay / 1000)}s to avoid Steam ban detection`
@@ -215,7 +292,7 @@ export class AuthenticationService {
     }
 
     // Should never reach here, but TypeScript needs it
-    throw new AuthenticationError('Authentication failed - unexpected error', lastError);
+    throw new AuthError('Authentication failed - unexpected error', undefined, lastError);
   }
 
   /**
@@ -241,7 +318,7 @@ export class AuthenticationService {
       const onError = (err: Error) => {
         clearTimeout(timeout);
         cleanup();
-        reject(err);
+        reject(wrapSteamError(err));
       };
 
       const cleanup = () => {

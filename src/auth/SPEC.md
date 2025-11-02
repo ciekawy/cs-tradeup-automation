@@ -310,7 +310,213 @@ Session persistence is **critical** for Steam ban avoidance:
 - **Container Restart Support**: Bot can restart without triggering new login
 - **Recommended Usage**: Always enable session persistence in production
 
+## Rate Limiting
+
+### RateLimiter Interface
+
+```typescript
+interface RateLimiter {
+  /**
+   * Initialize rate limiter (loads volume data from disk)
+   */
+  initialize(): Promise<void>;
+
+  /**
+   * Increment daily and monthly authentication counters
+   * @throws RateLimitError if limits exceeded
+   */
+  increment(): Promise<void>;
+
+  /**
+   * Check if rate limits are exceeded
+   * @returns True if daily or monthly limit exceeded
+   */
+  isLimitExceeded(): Promise<boolean>;
+
+  /**
+   * Get current rate limit statistics
+   */
+  getStats(): Promise<RateLimitStats>;
+
+  /**
+   * Reset counters to zero (admin use only)
+   */
+  reset(): Promise<void>;
+}
+
+interface RateLimitStats {
+  daily: { count: number; limit: number; date: string };
+  monthly: { count: number; limit: number; month: string };
+}
+```
+
+### Rate Limiting Strategy
+
+**Purpose**: Prevent Steam account restrictions by limiting authentication frequency
+
+**Limits (Configurable via Environment)**:
+
+- **Daily**: 10 attempts per day (default, configurable via `MAX_DAILY_AUTH_ATTEMPTS`)
+- **Monthly**: 100 attempts per month (default, configurable via `MAX_MONTHLY_AUTH_ATTEMPTS`)
+
+**Volume Tracking**:
+
+- **Persistence**: Counters stored in `/data/volume.json`
+- **Automatic Rotation**: Daily counter resets at midnight, monthly counter resets on 1st
+- **Offline Support**: Volume data persists across container restarts
+
+**Enforcement**:
+
+- Check limits BEFORE attempting authentication
+- Throw `RateLimitError` if limits exceeded
+- Include current statistics in error for debugging
+
+### Human-Paced Delays
+
+**CRITICAL**: Delays are mandatory to avoid Steam ban detection
+
+**Implementation**:
+
+```typescript
+// Base delay with exponential backoff
+const baseDelay = Math.min(retryDelayMin * Math.pow(2, attempt - 1), retryDelayMax);
+
+// Additive jitter (+0% to +20%) - NEVER subtract below minimum
+const jitter = baseDelay * 0.2 * Math.random();
+const delay = Math.max(baseDelay + jitter, retryDelayMin);
+```
+
+**Key Properties**:
+
+- **Minimum Enforced**: Delay always >= `retryDelayMin` (default: 30s)
+- **Additive Jitter**: Randomization adds 0-20% to prevent pattern detection
+- **Exponential Backoff**: Each retry doubles the delay (capped at `retryDelayMax`)
+- **Safety Check**: `Math.max()` ensures minimum is never violated
+
+**Why This Matters**:
+
+- Steam monitors authentication patterns for bot detection
+- Consistent timing = bot signature
+- Random delays = human-like behavior
+- Minimum delay ensures sufficient spacing between attempts
+
+## Error Handling
+
+### Custom Error Classes
+
+**AuthenticationError** - Base authentication failure
+
+```typescript
+class AuthenticationError extends Error {
+  code?: string; // Steam EResult code
+  cause?: Error; // Original error
+  isRetryable: boolean; // Whether retry makes sense
+}
+```
+
+**RateLimitError** - Rate limit exceeded
+
+```typescript
+class RateLimitError extends Error {
+  code: 'RATE_LIMIT_EXCEEDED';
+  dailyLimit: number;
+  monthlyLimit: number;
+  currentDaily: number;
+  currentMonthly: number;
+}
+```
+
+**SteamProtocolError** - Steam API protocol error
+
+```typescript
+class SteamProtocolError extends Error {
+  code: string; // EResult code (e.g., 'InvalidPassword')
+  eresult: number; // Numeric EResult
+  isCritical(): boolean; // True if unrecoverable
+}
+```
+
+**TwoFactorError** - 2FA required but unavailable
+
+```typescript
+class TwoFactorError extends Error {
+  code: '2FA_REQUIRED';
+  message: 'Steam Guard 2FA code required...';
+}
+```
+
+**NetworkError** - Network/connectivity issues
+
+```typescript
+class NetworkError extends Error {
+  code: 'NETWORK_ERROR';
+  isRetryable: true;
+}
+```
+
+**SessionError** - Session management failures
+
+```typescript
+class SessionError extends Error {
+  code: 'SESSION_ERROR';
+  operation: 'save' | 'load' | 'clear';
+}
+```
+
+### Error Response Strategy
+
+**Critical Errors** (Graceful Shutdown):
+
+- `AccountLogonDenied` - Permanent ban
+- `AccountDisabled` - Account disabled
+- `ServiceUnavailable` - Steam maintenance (extended)
+
+**Retryable Errors** (Exponential Backoff):
+
+- `Timeout` - Network timeout
+- `TryAnotherCM` - Connection manager issue
+- Generic network errors
+
+**Non-Retryable Errors** (Immediate Failure):
+
+- `InvalidPassword` - Wrong credentials
+- `TwoFactorCodeMismatch` - Wrong 2FA code
+- Rate limit exceeded
+
+### Logging Standards
+
+**Error Logging**:
+
+```typescript
+// Include EResult code for Steam errors
+console.error(`[Auth] CRITICAL Steam error (${code}): ${message}`);
+
+// Include retry context
+console.error(`[Auth] Attempt ${attempt} failed: ${error.message}`);
+```
+
+**Security**:
+
+- NEVER log passwords, shared secrets, or session tokens
+- Sanitize error messages before logging
+- Include operation context (save, load, authenticate)
+
 ## Change Log
+
+### 2025-11-02 - TASK-006 - Rate Limiting & Error Handling
+
+**Changes**: Added RateLimiter class and comprehensive error handling system
+**Features**:
+
+- **RateLimiter**: Daily/monthly volume tracking with automatic rotation
+- **Custom Errors**: AuthenticationError, RateLimitError, SteamProtocolError, TwoFactorError, NetworkError, SessionError
+- **Jitter Fix**: Corrected delay calculation to enforce minimum (additive jitter only, +0% to +20%)
+- **Critical Error Handling**: Graceful shutdown for unrecoverable Steam errors
+- **Rate Limit Enforcement**: Check limits before authentication, throw descriptive errors
+
+**Author**: task-implement workflow
+**Status**: Implementation complete, 100% test pass rate (98/98 tests)
+**Validation**: All acceptance criteria met, jitter bug fixed, comprehensive test coverage
 
 ### 2025-11-02 - TASK-005 - Session Persistence Implementation
 

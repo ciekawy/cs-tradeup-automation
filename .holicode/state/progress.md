@@ -168,8 +168,16 @@
   - 100% test pass rate (81/81 tests - includes 16 new session tests) ✅
   - Fixed 2 pre-existing auth test failures ✅
   - Updated src/auth/SPEC.md with session persistence documentation ✅
-  - Completion: 2/3 Phase 2 tasks = 67% phase progress
-- [ ] **TASK-006 PENDING**: Rate limiting and error handling
+- [x] **TASK-006 COMPLETE**: Rate limiting and error handling
+  - RateLimiter class with daily/monthly volume tracking (/data/volume.json) ✅
+  - Custom error classes (AuthenticationError, RateLimitError, SteamProtocolError, TwoFactorError, NetworkError, SessionError) ✅
+  - Fixed critical jitter bug (additive jitter only, enforced minimum delay) ✅
+  - Graceful shutdown for critical Steam errors ✅
+  - Integrated rate limiting into AuthenticationService ✅
+  - 100% test pass rate (98/98 tests - includes 17 rate limiter + 19 auth tests) ✅
+  - Updated src/auth/SPEC.md with rate limiting and error handling documentation ✅
+  - Updated retro-inbox.md with comprehensive learnings ✅
+  - Completion: 3/3 Phase 2 tasks = 100% phase progress ✅ PHASE COMPLETE
 
 **Phase 1 Progress (Foundation Infrastructure)**:
 
