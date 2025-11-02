@@ -1,0 +1,315 @@
+import SteamUser from 'steam-user';
+import SteamTotp from 'steam-totp';
+
+/**
+ * Authentication configuration interface
+ */
+export interface AuthenticationConfig {
+  username: string;
+  password: string;
+  sharedSecret?: string;
+  maxRetries: number;
+  retryDelayMin: number;
+  retryDelayMax: number;
+}
+
+/**
+ * Authentication state interface
+ */
+export interface AuthenticationState {
+  isAuthenticated: boolean;
+  steamId?: string;
+  accountName?: string;
+  lastAuthTime?: Date;
+  retryCount: number;
+  lastError?: Error;
+}
+
+/**
+ * Custom error class for authentication failures
+ */
+export class AuthenticationError extends Error {
+  constructor(
+    message: string,
+    public readonly cause?: Error
+  ) {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
+
+/**
+ * Steam Authentication Service
+ *
+ * Provides Steam authentication with human-paced delays to mitigate ban risks.
+ * CRITICAL: Implements 30-60s randomized delays between authentication attempts
+ * to avoid Steam rate limiting and account restrictions.
+ */
+export class AuthenticationService {
+  private client: SteamUser;
+  private config: AuthenticationConfig;
+  private state: AuthenticationState;
+
+  constructor(config?: Partial<AuthenticationConfig>) {
+    // Load configuration from environment variables with defaults
+    this.config = {
+      username: process.env.STEAM_USERNAME || '',
+      password: process.env.STEAM_PASSWORD || '',
+      sharedSecret: process.env.STEAM_SHARED_SECRET,
+      maxRetries: config?.maxRetries ?? 5,
+      retryDelayMin: config?.retryDelayMin ?? 30000, // 30 seconds
+      retryDelayMax: config?.retryDelayMax ?? 60000, // 60 seconds
+      ...config,
+    };
+
+    // Validate required credentials
+    if (!this.config.username || !this.config.password) {
+      throw new AuthenticationError(
+        'STEAM_USERNAME and STEAM_PASSWORD environment variables are required'
+      );
+    }
+
+    // Initialize state
+    this.state = {
+      isAuthenticated: false,
+      retryCount: 0,
+    };
+
+    // Create Steam client
+    this.client = new SteamUser();
+
+    // Setup event handlers
+    this.setupEventHandlers();
+  }
+
+  /**
+   * Setup event handlers for Steam client
+   */
+  private setupEventHandlers(): void {
+    // Successful login
+    this.client.on('loggedOn', (details) => {
+      this.state.isAuthenticated = true;
+      this.state.steamId = this.client.steamID?.getSteamID64() || undefined;
+      this.state.accountName = details.client_supplied_steam_id || this.config.username;
+      this.state.lastAuthTime = new Date();
+      this.state.retryCount = 0;
+
+      console.log('[Auth] Successfully authenticated with Steam');
+      console.log(`[Auth] SteamID: ${this.state.steamId}`);
+      console.log(`[Auth] Account: ${this.state.accountName}`);
+    });
+
+    // Handle 2FA (Steam Guard Mobile Authenticator)
+    this.client.on('steamGuard', (domain, callback) => {
+      if (this.config.sharedSecret) {
+        // Auto-generate 2FA code using shared secret
+        const code = SteamTotp.generateAuthCode(this.config.sharedSecret);
+        console.log('[Auth] 2FA required - auto-generating code from shared secret');
+        callback(code);
+      } else {
+        // No shared secret available - user must provide code manually
+        const error = new AuthenticationError(
+          'Steam Guard 2FA code required. Please set STEAM_SHARED_SECRET environment variable or enter code manually.'
+        );
+        this.state.lastError = error;
+        throw error;
+      }
+    });
+
+    // Handle errors
+    this.client.on('error', (err) => {
+      this.state.isAuthenticated = false;
+      this.state.lastError = err;
+      console.error('[Auth] Steam client error:', err.message);
+    });
+
+    // Handle disconnection
+    this.client.on('disconnected', (eresult, msg) => {
+      this.state.isAuthenticated = false;
+      console.log(`[Auth] Disconnected from Steam: ${msg} (EResult: ${eresult})`);
+    });
+  }
+
+  /**
+   * Authenticate with Steam
+   *
+   * Implements retry logic with exponential backoff and human-paced delays.
+   * CRITICAL: Delays between retries are randomized (30-60s) to prevent
+   * Steam ban detection. Never allow rapid-fire authentication attempts.
+   *
+   * @returns Promise that resolves when authenticated
+   * @throws AuthenticationError if authentication fails after all retries
+   */
+  async authenticate(): Promise<void> {
+    let lastError: Error | undefined;
+
+    for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
+      this.state.retryCount = attempt;
+
+      try {
+        console.log(`[Auth] Authentication attempt ${attempt}/${this.config.maxRetries}`);
+
+        // Attempt login
+        await this.attemptLogin();
+
+        // Success - reset retry count and return
+        this.state.retryCount = 0;
+        return;
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`[Auth] Attempt ${attempt} failed:`, lastError.message);
+
+        // If this was the last attempt, throw the error
+        if (attempt >= this.config.maxRetries) {
+          throw new AuthenticationError(
+            `Authentication failed after ${this.config.maxRetries} attempts: ${lastError.message}`,
+            lastError
+          );
+        }
+
+        // Calculate delay with exponential backoff
+        // Start at retryDelayMin, double each retry, cap at retryDelayMax
+        const baseDelay = Math.min(
+          this.config.retryDelayMin * Math.pow(2, attempt - 1),
+          this.config.retryDelayMax
+        );
+
+        // Add randomization to prevent pattern detection (±20%)
+        const jitter = baseDelay * 0.2;
+        const delay = baseDelay + (Math.random() * jitter * 2 - jitter);
+
+        console.log(
+          `[Auth] CRITICAL: Implementing human-paced delay of ${Math.round(delay / 1000)}s to avoid Steam ban detection`
+        );
+        console.log(
+          `[Auth] Retrying in ${Math.round(delay / 1000)} seconds (attempt ${attempt + 1}/${this.config.maxRetries})...`
+        );
+
+        // Wait before next attempt
+        await this.delay(delay);
+      }
+    }
+
+    // Should never reach here, but TypeScript needs it
+    throw new AuthenticationError('Authentication failed - unexpected error', lastError);
+  }
+
+  /**
+   * Attempt a single login
+   *
+   * @returns Promise that resolves when login succeeds
+   * @throws Error if login fails
+   */
+  private attemptLogin(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Set a timeout for the login attempt
+      const timeout = setTimeout(() => {
+        reject(new Error('Login attempt timed out after 30 seconds'));
+      }, 30000);
+
+      // Setup one-time listeners for this attempt
+      const onLoggedOn = () => {
+        clearTimeout(timeout);
+        cleanup();
+        resolve();
+      };
+
+      const onError = (err: Error) => {
+        clearTimeout(timeout);
+        cleanup();
+        reject(err);
+      };
+
+      const cleanup = () => {
+        this.client.off('loggedOn', onLoggedOn);
+        this.client.off('error', onError);
+      };
+
+      // Attach listeners
+      this.client.once('loggedOn', onLoggedOn);
+      this.client.once('error', onError);
+
+      // Attempt login
+      this.client.logOn({
+        accountName: this.config.username,
+        password: this.config.password,
+      });
+    });
+  }
+
+  /**
+   * Check if currently authenticated
+   *
+   * @returns True if authenticated and session valid
+   */
+  isAuthenticated(): boolean {
+    return this.state.isAuthenticated;
+  }
+
+  /**
+   * Get current authentication state
+   *
+   * @returns Current authentication state
+   */
+  getState(): Readonly<AuthenticationState> {
+    return { ...this.state };
+  }
+
+  /**
+   * Disconnect from Steam
+   *
+   * @returns Promise that resolves when disconnected
+   */
+  async disconnect(): Promise<void> {
+    return new Promise((resolve) => {
+      if (!this.state.isAuthenticated) {
+        resolve();
+        return;
+      }
+
+      // Wait for disconnection event
+      this.client.once('disconnected', () => {
+        console.log('[Auth] Disconnected from Steam');
+        resolve();
+      });
+
+      // Initiate logout
+      this.client.logOff();
+
+      // Fallback timeout in case disconnected event doesn't fire
+      setTimeout(() => {
+        this.state.isAuthenticated = false;
+        resolve();
+      }, 5000);
+    });
+  }
+
+  /**
+   * Delay utility with human-pacing explanation
+   *
+   * CRITICAL: This delay is REQUIRED to prevent Steam ban detection.
+   * Do not remove or reduce these delays. Steam monitors authentication
+   * patterns and may restrict accounts that attempt rapid-fire logins.
+   *
+   * @param ms Milliseconds to delay
+   * @returns Promise that resolves after delay
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+}
+
+/**
+ * Factory function to create and authenticate a Steam client
+ *
+ * @param config Optional authentication configuration
+ * @returns Promise that resolves to authenticated AuthenticationService
+ * @throws AuthenticationError if authentication fails
+ */
+export async function createAuthenticatedClient(
+  config?: Partial<AuthenticationConfig>
+): Promise<AuthenticationService> {
+  const service = new AuthenticationService(config);
+  await service.authenticate();
+  return service;
+}
