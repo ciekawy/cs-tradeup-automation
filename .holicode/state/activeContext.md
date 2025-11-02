@@ -38,15 +38,30 @@
 
 ## Immediate Next Steps
 
-### 1. Begin Implementation Execution
-- **Next**: Run `/task-implement.md` workflow to start coding
-- **Recommended Order**:
-  1. Foundation: TASK-001 → TASK-002 → TASK-003 (Docker infrastructure)
-  2. Authentication: TASK-004 → TASK-005 → TASK-006 (Steam auth)
-  3. Automation: TASK-007 → TASK-008 → TASK-009 (GC protocol)
-  4. Validation: TASK-010 → TASK-011 (PoC testing)
-- All tasks have clear dependencies and acceptance criteria
-- Component SPECs will be created during implementation (co-located with code)
+### 1. Begin Implementation Execution (WITH PR-FIRST WORKFLOW)
+- **Branch Strategy**: Feature branches per phase (4 phases total)
+  - `feat/phase1-infrastructure` (TASK-001, TASK-002, TASK-003)
+  - `feat/phase2-authentication` (TASK-004, TASK-005, TASK-006)
+  - `feat/phase3-automation` (TASK-007, TASK-008, TASK-009)
+  - `feat/phase4-validation` (TASK-010, TASK-011)
+
+- **Implementation Order with PRs**:
+  1. **Phase 1 - Foundation**: TASK-001 → TASK-002 → TASK-003 → PR #1
+  2. **Phase 2 - Authentication**: TASK-004 → TASK-005 → TASK-006 → PR #2
+  3. **Phase 3 - Automation**: TASK-007 → TASK-008 → TASK-009 → PR #3
+  4. **Phase 4 - Validation**: TASK-010 → TASK-011 → PR #4
+
+- **Per-Task Requirements**:
+  - Implement code and tests
+  - Create Component SPECs (co-located with src/)
+  - Update state files (activeContext.md, progress.md)
+  - Update WORK_SPEC.md manifest
+  - Commit all changes with conventional commits
+
+- **Per-Phase Requirements**:
+  - All phase tasks completed and committed
+  - Run `/github-pr-create.md` workflow
+  - Merge PR after review
 
 ### 2. Story #7 (Manual Prerequisites) - User Action Required
 - This story is entirely manual setup (no code tasks)
