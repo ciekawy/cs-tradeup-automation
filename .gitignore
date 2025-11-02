@@ -18,6 +18,9 @@
 # HoliCode docs cache (external documentation cache)
 .holicode/docs-cache/
 
+# HoliCode temporary files (PR bodies, etc.)
+.holicode/tmp/
+
 # Node.js
 node_modules/
 npm-debug.log*
