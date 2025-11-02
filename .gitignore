@@ -36,6 +36,9 @@ build/
 .env.local
 .env.*.local
 
+# Docker persistent data (when using bind mount)
+data/
+
 # IDE
 *.swp
 *.swo
