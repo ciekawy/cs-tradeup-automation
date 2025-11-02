@@ -46,6 +46,45 @@ This is a living document where we capture:
 
 ## Active Entries
 
+### 2025-11-02: TASK-002 Docker Infrastructure Implementation
+
+**Context**: Implemented Docker containerization for CS2 trade-up bot (Dockerfile, docker-compose.yml, .env.example, .dockerignore)
+
+**Learnings**:
+1. **Vitest Watch Mode Hangs**: Default `pnpm test` runs Vitest in watch mode, which hangs waiting for file changes. For CI and automated workflows, use `pnpm test --run` or `vitest --run` to execute tests once and exit.
+
+2. **.dockerignore Gotcha**: Initially excluded `pnpm-lock.yaml` from Docker build context, but Dockerfile needs it for `pnpm install --frozen-lockfile`. Solution: Remove `pnpm-lock.yaml` from .dockerignore exclusions.
+
+3. **TypeScript Config for Tests**: Including `tests/**/*` in tsconfig.json while having `rootDir: ./src` causes error. Solution: Remove `rootDir` setting to allow TypeScript to infer common root from all included files.
+
+4. **Docker Build Success**: Container built successfully with:
+   - Node.js 24 Alpine base (~53MB download)
+   - pnpm installed globally
+   - 220 packages installed in 3.9s
+   - TypeScript compiled successfully
+   - Non-root user (botuser) configured
+   - All tests passing (16/16)
+
+**Process Improvements**:
+- Add vitest non-watch mode note to package.json scripts documentation
+- Document common .dockerignore patterns and what NOT to exclude
+- Consider creating tsconfig.test.json separate from tsconfig.json for test-specific settings
+
+**Action Items**:
+- [x] Dockerfile created with Node.js 24 Alpine
+- [x] docker-compose.yml with persistent volumes and hot-reload
+- [x] .env.example template with Steam credentials
+- [x] .dockerignore optimized (excluding only unnecessary files)
+- [x] Docker smoke tests (12 tests) all passing
+- [x] Container builds successfully
+- [ ] Update WORK_SPEC.md with TASK-002 completion
+- [ ] Update state files (activeContext, progress)
+- [ ] Commit TASK-002 changes
+
+**Impact**: Docker infrastructure complete and validated. Ready for bot implementation code. Walking skeleton can now run in containerized environment with persistent session storage.
+
+---
+
 ### 2025-11-02: Epic 3 Story Breakdown - Real GC Testing & Mitigation Validation
 
 **Context**: Executed `/functional-analyze.md` workflow to break down Epic 3 (PoC Validation) into user stories

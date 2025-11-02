@@ -15,37 +15,56 @@
   - Infrastructure smoke tests passing (4/4 tests)
   - Component SPEC created (src/infrastructure/SPEC.md)
   - Commit: 890b15f
-- 🔜 **NEXT**: TASK-002 - Create Docker infrastructure (docker-compose.yml, Dockerfile)
-- 📋 **REMAINING**: TASK-003 - Configure development tooling
+- ✅ **TASK-002 COMPLETE**: Docker infrastructure created
+  - Dockerfile with Node.js 24 Alpine base image
+  - docker-compose.yml with persistent volumes and hot-reload
+  - .env.example template with Steam credentials
+  - .dockerignore optimized for build context
+  - Docker smoke tests passing (12/12 tests)
+  - Container builds successfully
+  - Placeholder entry point (src/index.ts)
+  - Component SPEC updated with Docker documentation
+- 🔜 **NEXT**: TASK-003 - Configure development tooling and documentation
 
 ### Recent Changes (2025-11-02)
+
+**TASK-002 Implementation Complete**:
+- ✅ Created Dockerfile with Node.js 24 Alpine base (~53MB)
+- ✅ Configured docker-compose.yml with bot-data volume and hot-reload mounts
+- ✅ Created .env.example template (Steam credentials, app config)
+- ✅ Optimized .dockerignore (exclude node_modules, preserve pnpm-lock.yaml)
+- ✅ Fixed TypeScript config (removed rootDir to support tests/ directory)
+- ✅ Created Docker smoke tests (12/12 tests passing)
+- ✅ Container builds successfully (220 packages in 3.9s, TypeScript compiles)
+- ✅ Created placeholder entry point (src/index.ts) for Docker health checks
+- ✅ Updated Component SPEC with Docker documentation and change log
 
 **TASK-001 Implementation Complete** (890b15f):
 - ✅ Initialized pnpm workspace with package.json (Node.js 22+, pnpm 8+)
 - ✅ Configured TypeScript (ES2022, strict mode, path aliases)
 - ✅ Set up ESLint with TypeScript support and Prettier integration
-- ✅ Configured Prettier (single quotes, 100 char width)
 - ✅ Set up Vitest testing framework (Node.js environment, V8 coverage)
-- ✅ Created directory structure (src/, tests/, docs/)
-- ✅ Created Component SPEC (src/infrastructure/SPEC.md)
-- ✅ Added infrastructure smoke tests (4/4 passing)
-- ✅ All dependencies installed successfully (220 packages)
-- ✅ Committed with conventional commit format
+- ✅ Infrastructure smoke tests passing (4/4 tests)
 
 **Branch**: feat/phase1-infrastructure (active)
-**Test Results**: 4/4 tests passing (232ms)
-**Next Task**: TASK-002 - Docker infrastructure setup
+**Test Results**: 16/16 tests passing (all infrastructure + Docker tests)
+**Progress**: Phase 1 - 66% complete (2/3 tasks done)
+**Next Task**: TASK-003 - Configure development tooling and documentation
 
 ## Immediate Next Steps
 
 ### 1. Continue Phase 1 Implementation
 - ✅ **TASK-001 COMPLETE**: pnpm workspace initialized (commit 890b15f)
-- 🔜 **TASK-002 NEXT**: Create Docker infrastructure
-  - Create Dockerfile (Alpine Linux, Node.js 24)
-  - Create docker-compose.yml
-  - Configure volumes for persistent data
-  - Test container build and startup
-- 📋 **TASK-003**: Configure development tooling (after TASK-002)
+- ✅ **TASK-002 COMPLETE**: Docker infrastructure created
+  - Dockerfile with Node.js 24 Alpine
+  - docker-compose.yml with persistent volumes
+  - .env.example template
+  - Docker smoke tests (12/12 passing)
+  - Container builds successfully
+- 🔜 **TASK-003 NEXT**: Configure development tooling and documentation
+  - Set up development scripts
+  - Create README.md with setup instructions
+  - Document Docker usage patterns
 
 ### 2. Phase 1 Completion Flow
 - After all 3 Phase 1 tasks complete:
