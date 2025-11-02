@@ -237,6 +237,29 @@ pnpm lint
 pnpm lint:fix
 ```
 
+### Integration Testing
+
+The project includes comprehensive E2E integration tests that validate the complete workflow:
+
+- **Game Coordinator connection** with human-paced delays
+- **Trade-up execution** with validation and error handling
+- **Walking skeleton** for minimal viable automation
+- **Delay verification** to ensure ban mitigation strategies work
+
+**Run integration tests**:
+
+```bash
+# Run integration tests specifically
+pnpm test tests/integration.test.ts
+
+# All tests including integration (137+ tests)
+pnpm test
+```
+
+**Expected Results**: ✅ All 6 integration tests passing, 100% test success rate
+
+📖 **For detailed integration workflow documentation**, see [docs/INTEGRATION.md](docs/INTEGRATION.md)
+
 ## 📁 Project Structure
 
 ```
