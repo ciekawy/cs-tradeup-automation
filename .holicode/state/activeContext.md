@@ -1,13 +1,35 @@
 # Active Context: CS2 Trade-Up Educational Bot
 
 **Last Updated**: 2025-11-02
-**Current Phase**: Iteration 1 Story Breakdown Complete, Implementation Planning Next
+**Current Phase**: Phase 2 - Authentication (Story #9) - ✅ COMPLETE
 
 ## Current Focus
 
 ### What We're Working On
 
-**Phase 1 - Foundation (Infrastructure) - IN PROGRESS**
+**Phase 2 - Authentication (Story #9) - ✅ COMPLETE (3/3 tasks)**
+
+- ✅ **TASK-004 COMPLETE**: Steam authentication with steam-user library
+  - AuthenticationService with retry logic, 2FA support, human-paced delays
+  - 95.4% test pass rate (62/65 tests)
+  - Commit: cafdbbd
+- ✅ **TASK-005 COMPLETE**: Session persistence and token management
+  - SessionManager class (save/load/clear/hasSession methods)
+  - Automatic session restore on container restart
+  - 100% test pass rate (81/81 tests)
+  - Fixed 2 pre-existing auth test failures
+  - Secure file permissions (600)
+  - Updated src/auth/SPEC.md with session persistence documentation
+- ✅ **TASK-006 COMPLETE**: Rate limiting and error handling
+  - RateLimiter class with daily/monthly volume tracking
+  - Custom error classes (AuthenticationError, RateLimitError, SteamProtocolError, etc.)
+  - Fixed jitter bug (delay now always >= minimum for ban prevention)
+  - Graceful shutdown for critical Steam errors
+  - 100% test pass rate (98/98 tests)
+  - Updated src/auth/SPEC.md with rate limiting and error handling documentation
+- 🔜 **NEXT**: Create Phase 2 PR (all 3 tasks complete)
+
+**Phase 1 - Foundation (Infrastructure) - ✅ COMPLETE**
 
 - ✅ **TASK-001 COMPLETE**: pnpm workspace with TypeScript initialized
   - Package.json with pnpm workspace configuration
@@ -29,6 +51,20 @@
 - 🔜 **NEXT**: TASK-003 - Configure development tooling and documentation
 
 ### Recent Changes (2025-11-02)
+
+**TASK-006 Implementation Complete**:
+
+- ✅ Created RateLimiter class with volume tracking (/data/volume.json)
+- ✅ Created custom error classes (AuthenticationError, RateLimitError, SteamProtocolError, TwoFactorError, NetworkError, SessionError)
+- ✅ Integrated rate limiting into AuthenticationService (check before auth)
+- ✅ Fixed critical jitter bug (additive jitter only, enforced minimum delay)
+- ✅ Implemented graceful shutdown for critical Steam errors
+- ✅ Created comprehensive tests (17 rate limiter + 19 auth = 36 total)
+- ✅ Fixed test contamination (afterEach cleanup)
+- ✅ Fixed monthly rotation test (update all date fields)
+- ✅ Updated src/auth/SPEC.md with rate limiting and error handling docs
+- ✅ 100% test pass rate achieved (98/98 tests)
+- ✅ Updated retro-inbox.md with comprehensive learnings
 
 **TASK-003 Implementation Complete**:
 
@@ -62,10 +98,10 @@
 - ✅ Set up Vitest testing framework (Node.js environment, V8 coverage)
 - ✅ Infrastructure smoke tests passing (4/4 tests)
 
-**Branch**: feat/phase1-infrastructure (active)
-**Test Results**: 46/46 tests passing (infrastructure + Docker + documentation tests)
-**Progress**: Phase 1 - 100% complete (3/3 tasks done)
-**Next Task**: Create Phase 1 PR for review
+**Branch**: feat/phase2-authentication (active)
+**Test Results**: 98/98 tests passing (100% - all infrastructure, Docker, documentation, session, rate limiter, and auth tests)
+**Progress**: Phase 2 - ✅ 100% COMPLETE (3/3 tasks done)
+**Next Task**: Create Phase 2 PR for review and merge
 
 ## Immediate Next Steps
 
