@@ -1,13 +1,14 @@
 # Component SPEC: Infrastructure
 
-**Component Type**: Project Infrastructure  
-**Created**: 2025-11-02  
-**Status**: Initialized  
+**Component Type**: Project Infrastructure
+**Created**: 2025-11-02
+**Status**: Initialized
 **Complexity**: 2/10
 
 ## Purpose
 
 Project infrastructure setup for CS2 Trade-Up Educational Bot, including:
+
 - Package management (pnpm workspace)
 - TypeScript configuration
 - Code quality tools (ESLint, Prettier)
@@ -19,11 +20,13 @@ Project infrastructure setup for CS2 Trade-Up Educational Bot, including:
 ## API Contract
 
 ### Package Manager
+
 - **Tool**: pnpm >=8.0.0
 - **Node.js**: >=22.0.0
 - **Workspace**: Single package (monorepo-ready structure)
 
 ### Build Scripts
+
 ```bash
 pnpm test          # Run tests with Vitest
 pnpm test:watch    # Run tests in watch mode
@@ -38,6 +41,7 @@ pnpm typecheck     # Type-check without emitting
 ## Data Model
 
 ### Directory Structure
+
 ```
 cs-tradeup-automation/
 ├── src/                 # Source code (TypeScript)
@@ -61,6 +65,7 @@ cs-tradeup-automation/
 ```
 
 ### TypeScript Configuration
+
 - **Target**: ES2022
 - **Module**: ES2022 (ES modules)
 - **Strict Mode**: Enabled
@@ -69,11 +74,13 @@ cs-tradeup-automation/
 - **Path Aliases**: `@/*` maps to `src/*`
 
 ### Code Quality Tools
+
 - **ESLint**: TypeScript-aware linting with recommended rules
 - **Prettier**: Consistent code formatting (single quotes, 100 char width)
 - **Integration**: ESLint + Prettier via `eslint-plugin-prettier`
 
 ### Testing Framework
+
 - **Tool**: Vitest
 - **Environment**: Node.js
 - **Coverage**: V8 provider (text, JSON, HTML reports)
@@ -82,6 +89,7 @@ cs-tradeup-automation/
 ### Docker Configuration
 
 #### Dockerfile
+
 - **Base Image**: node:24-alpine (minimal footprint)
 - **Package Manager**: pnpm installed globally
 - **Security**: Non-root user (botuser:1001)
@@ -91,6 +99,7 @@ cs-tradeup-automation/
 - **Entrypoint**: node dist/index.js
 
 #### docker-compose.yml
+
 - **Service**: Single bot service
 - **Restart Policy**: unless-stopped
 - **Volumes**:
@@ -103,13 +112,16 @@ cs-tradeup-automation/
 - **Network**: Isolated bridge network
 
 #### Environment Variables (.env.example)
+
 **Required**:
+
 - STEAM_USERNAME - Steam account username
 - STEAM_PASSWORD - Steam account password
 - STEAM_SHARED_SECRET - Steam Guard shared secret
 - STEAM_API_KEY - Steam Web API key
 
 **Optional**:
+
 - NODE_ENV (default: development)
 - LOG_LEVEL (default: info)
 - MAX_DAILY_CRAFTS (default: 12)
@@ -118,6 +130,7 @@ cs-tradeup-automation/
 - CRAFT_DELAY_MAX (default: 900000ms = 15 min)
 
 #### Docker Commands
+
 ```bash
 # Build container
 docker-compose build
@@ -141,21 +154,25 @@ docker-compose exec bot sh
 ## Edge Cases & Error Handling
 
 ### Missing Dependencies
+
 - **Issue**: Dependencies not installed
 - **Resolution**: Run `pnpm install`
 - **Validation**: Check for `node_modules/` directory
 
 ### TypeScript Compilation Errors
+
 - **Issue**: Type errors prevent build
 - **Resolution**: Fix type errors or use `typecheck` script
 - **Validation**: `pnpm typecheck` exits with 0
 
 ### Linting Failures
+
 - **Issue**: Code doesn't meet style guidelines
 - **Resolution**: Run `pnpm lint:fix` for auto-fixes
 - **Validation**: `pnpm lint` exits with 0
 
 ### Node.js Version Mismatch
+
 - **Issue**: Unsupported Node.js version
 - **Resolution**: Upgrade to Node.js 22 or 24
 - **Validation**: `node -v` shows >=22.0.0
@@ -163,9 +180,11 @@ docker-compose exec bot sh
 ## Dependencies
 
 ### Production Dependencies
+
 - None yet (to be added in future tasks)
 
 ### Development Dependencies
+
 - `typescript` ^5.4.0 - TypeScript compiler
 - `@types/node` ^22.0.0 - Node.js type definitions
 - `vitest` ^1.0.0 - Testing framework
@@ -180,12 +199,14 @@ docker-compose exec bot sh
 ## Testing Strategy
 
 ### Unit Tests
+
 - Location: `tests/` directory
 - Naming: `*.test.ts` or `*.spec.ts`
 - Framework: Vitest with Node.js environment
 - Coverage Target: >90% for critical paths
 
 ### Test Execution
+
 ```bash
 # Run all tests
 pnpm test
@@ -198,6 +219,7 @@ pnpm test:coverage
 ```
 
 ### Validation Criteria
+
 - All tests pass
 - Coverage meets minimum threshold (>90%)
 - No linting errors
@@ -205,14 +227,66 @@ pnpm test:coverage
 
 ## Linked Specifications
 
-**Task**: [TASK-001](../../.holicode/specs/tasks/TASK-001.md) - Initialize pnpm workspace with TypeScript configuration  
-**Story**: [STORY-008](https://github.com/ciekawy/cs-tradeup-automation/issues/8) - Docker Infrastructure  
+**Task**: [TASK-001](../../.holicode/specs/tasks/TASK-001.md) - Initialize pnpm workspace with TypeScript configuration
+**Story**: [STORY-008](https://github.com/ciekawy/cs-tradeup-automation/issues/8) - Docker Infrastructure
 **Epic**: [EPIC-002](https://github.com/ciekawy/cs-tradeup-automation/issues/2) - Core Automation Loop
+
+### Development Tooling
+
+#### Git Hooks (Husky)
+
+- **Tool**: Husky for Git hook management
+- **Pre-commit Hook**: Runs `pnpm lint && pnpm test` before each commit
+- **Purpose**: Ensures code quality and prevents broken commits
+
+#### VS Code Configuration
+
+- **Settings**: `.vscode/settings.json` with workspace settings
+- **Key Features**:
+  - Format on save enabled
+  - ESLint auto-fix on save
+  - Prettier as default formatter
+  - TypeScript workspace version
+  - Ruler at 100 characters
+  - Trim trailing whitespace
+
+#### Documentation
+
+- **README.md**: Project overview, setup instructions, Docker usage
+- **CONTRIBUTING.md**: Development workflow, code style, testing guidelines
+- **Component SPECs**: Co-located SPEC.md files for each component
+
+#### Package Scripts (Development)
+
+```bash
+pnpm dev           # Development mode with TypeScript watch
+pnpm start         # Run compiled code (node dist/index.js)
+pnpm docker:build  # Build Docker image
+pnpm docker:up     # Start Docker containers (detached)
+pnpm docker:down   # Stop Docker containers
+```
 
 ## Change Log
 
+### 2025-11-02 - TASK-003 (Development Tooling)
+
+**Changes**:
+
+- Created README.md with project overview and setup instructions
+- Created CONTRIBUTING.md with development workflow and contribution guidelines
+- Created .vscode/settings.json with recommended extensions and workspace settings
+- Added development scripts to package.json (dev, start, docker:build, docker:up, docker:down)
+- Configured Git hooks with Husky (pre-commit: lint + test)
+- Added husky as devDependency
+
+**Author**: task-implement workflow
+**Validation**: Documentation files created, Git hooks configured
+**Status**: Development tooling complete
+
 ### 2025-11-02 - TASK-001 (Initial Setup)
-**Changes**: 
+
+**Changes**:
+
 - Created package.json with pnpm workspace configuration
 - Configured TypeScript (tsconfig.json, tsconfig.build.json)
 - Set up ESLint with TypeScript support and Prettier integration
@@ -221,12 +295,14 @@ pnpm test:coverage
 - Created directory structure (src/, tests/, docs/)
 - All configuration files use ES2022 modules and Node.js 22+ target
 
-**Author**: task-implement workflow  
-**Validation**: Pending - dependencies not yet installed, tests not yet run  
+**Author**: task-implement workflow
+**Validation**: Pending - dependencies not yet installed, tests not yet run
 **Status**: Configuration complete, awaiting `pnpm install` and validation
 
 ### 2025-11-02 - TASK-002 (Docker Infrastructure)
+
 **Changes**:
+
 - Created Dockerfile with Node.js 24 Alpine base image
 - Configured docker-compose.yml with persistent volumes and hot-reload
 - Added .env.example template with Steam authentication variables
@@ -236,6 +312,6 @@ pnpm test:coverage
 - Configured health checks and logging rotation
 - Added development hot-reload via volume mounts (src/, tests/)
 
-**Author**: task-implement workflow  
-**Validation**: Container builds successfully, awaiting integration tests  
+**Author**: task-implement workflow
+**Validation**: Container builds successfully, awaiting integration tests
 **Status**: Docker infrastructure complete, ready for application code
