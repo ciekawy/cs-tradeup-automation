@@ -38,6 +38,32 @@ export interface InventoryItem {
 }
 
 /**
+ * Trade-up execution result interface
+ */
+export interface TradeUpResult {
+  success: boolean;
+  outputItem?: {
+    itemId?: string;
+    defIndex?: number;
+    paintIndex?: number;
+    paintSeed?: number;
+    paintWear?: number;
+    rarity?: number;
+    quality?: number;
+  };
+  inputAssetIds: string[];
+  timestamp: Date;
+}
+
+/**
+ * Trade-up validation error interface
+ */
+export interface TradeUpValidationError {
+  valid: boolean;
+  errors: string[];
+}
+
+/**
  * Game Coordinator Error class
  */
 export class GameCoordinatorError extends Error {
@@ -279,6 +305,139 @@ export class GameCoordinatorService {
    */
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Validate trade-up input requirements
+   *
+   * @param assetIds Array of asset IDs to validate
+   * @returns Validation result with errors if any
+   */
+  private validateTradeUpInput(assetIds: string[]): TradeUpValidationError {
+    const errors: string[] = [];
+
+    // Validate asset ID count
+    if (!Array.isArray(assetIds)) {
+      errors.push('Asset IDs must be an array');
+    } else if (assetIds.length !== 10) {
+      errors.push(`Trade-up requires exactly 10 items, got ${assetIds.length}`);
+    }
+
+    // Validate asset IDs are strings
+    if (Array.isArray(assetIds)) {
+      assetIds.forEach((assetId, index) => {
+        if (typeof assetId !== 'string' || assetId.trim() === '') {
+          errors.push(`Asset ID at index ${index} must be a non-empty string`);
+        }
+      });
+    }
+
+    // TODO: Add rarity validation (requires inventory metadata)
+    // TODO: Add collection validation (requires item database)
+    // TODO: Add trade-lock validation (requires item status check)
+
+    return {
+      valid: errors.length === 0,
+      errors,
+    };
+  }
+
+  /**
+   * Execute a trade-up contract
+   *
+   * CRITICAL: Implements human-paced delay (30-60s) before execution
+   * to prevent Steam ban detection.
+   *
+   * @param assetIds Array of exactly 10 asset IDs for trade-up
+   * @param timeout Timeout for trade-up completion (default: 30s)
+   * @returns Promise that resolves with trade-up result
+   * @throws GameCoordinatorError if validation fails, not connected, or operation fails
+   */
+  async executeTradeUp(assetIds: string[], timeout: number = 30000): Promise<TradeUpResult> {
+    // Validate GC connection
+    if (!this.state.isConnected) {
+      throw new GameCoordinatorError(
+        'Not connected to Game Coordinator. Call connect() first.',
+        'GC_NOT_CONNECTED'
+      );
+    }
+
+    // Validate input
+    const validation = this.validateTradeUpInput(assetIds);
+    if (!validation.valid) {
+      throw new GameCoordinatorError(
+        `Trade-up input validation failed: ${validation.errors.join(', ')}`,
+        'TRADEUP_INVALID_INPUT'
+      );
+    }
+
+    // CRITICAL: Human-paced delay before trade-up execution
+    const delay = this.calculateOperationDelay();
+    console.log(
+      `[GC] CRITICAL: Implementing human-paced delay of ${Math.round(delay / 1000)}s before trade-up execution to avoid Steam ban detection`
+    );
+    console.log('[GC] Trade-ups are irreversible - this delay is mandatory for safety');
+    await this.delay(delay);
+
+    // Execute trade-up with timeout
+    return new Promise((resolve, reject) => {
+      const timeoutHandle = setTimeout(() => {
+        cleanup();
+        reject(
+          new GameCoordinatorError(
+            `Trade-up execution timed out after ${timeout}ms`,
+            'TRADEUP_TIMEOUT'
+          )
+        );
+      }, timeout);
+
+      const onCraftingComplete = (result: Record<string, unknown>) => {
+        clearTimeout(timeoutHandle);
+        cleanup();
+
+        console.log('[GC] Trade-up completed successfully:', result);
+
+        const tradeUpResult: TradeUpResult = {
+          success: true,
+          outputItem: {
+            itemId: result.itemId as string | undefined,
+            defIndex: result.defIndex as number | undefined,
+            paintIndex: result.paintIndex as number | undefined,
+            paintSeed: result.paintSeed as number | undefined,
+            paintWear: result.paintWear as number | undefined,
+            rarity: result.rarity as number | undefined,
+            quality: result.quality as number | undefined,
+          },
+          inputAssetIds: assetIds,
+          timestamp: new Date(),
+        };
+
+        resolve(tradeUpResult);
+      };
+
+      const cleanup = () => {
+        this.gcClient.off('craftingComplete', onCraftingComplete);
+      };
+
+      // Attach event listener
+      this.gcClient.once('craftingComplete', onCraftingComplete);
+
+      // Execute craft() method
+      console.log(`[GC] Executing trade-up with ${assetIds.length} items...`);
+      try {
+        this.gcClient.craft(assetIds);
+      } catch (error) {
+        clearTimeout(timeoutHandle);
+        cleanup();
+        reject(
+          new GameCoordinatorError(
+            `Failed to execute trade-up: ${error instanceof Error ? error.message : String(error)}`,
+            'TRADEUP_EXECUTION_FAILED',
+            error instanceof Error ? error : undefined
+          )
+        );
+      }
+    });
   }
 
   /**

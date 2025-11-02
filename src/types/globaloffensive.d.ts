@@ -37,6 +37,31 @@ declare module 'globaloffensive' {
      * One-time event listener
      */
     once(event: string, listener: (...args: unknown[]) => void): this;
+
+    /**
+     * Event: Trade-up craft completed
+     */
+    on(event: 'craftingComplete', listener: (result: CraftingResult) => void): this;
+
+    /**
+     * Execute a trade-up contract with 10 item asset IDs
+     * @param assetIDs Array of 10 asset IDs for trade-up contract
+     */
+    craft(assetIDs: string[]): void;
+  }
+
+  /**
+   * Result of a trade-up crafting operation
+   */
+  interface CraftingResult {
+    itemId?: string;
+    defIndex?: number;
+    paintIndex?: number;
+    paintSeed?: number;
+    paintWear?: number;
+    rarity?: number;
+    quality?: number;
+    [key: string]: unknown;
   }
 
   export = GlobalOffensive;

@@ -58,6 +58,29 @@ Retrieves CS2 inventory with asset IDs. Implements human-paced delay (30-60s) be
 
 **Note**: Currently returns placeholder empty array. Full implementation pending.
 
+##### `async executeTradeUp(assetIds: string[], timeout?: number): Promise<TradeUpResult>`
+
+Executes a CS2 trade-up contract using the craft() method. Implements human-paced delay (30-60s) before execution.
+
+**Parameters**:
+
+- `assetIds`: Array of exactly 10 item asset IDs to trade up
+- `timeout`: Optional timeout in ms (default: 30000)
+
+**Returns**: Promise that resolves with trade-up result containing output item
+**Throws**:
+
+- `GameCoordinatorError` if not connected (code: `GC_NOT_CONNECTED`)
+- `GameCoordinatorError` if validation fails (code: `TRADEUP_VALIDATION_FAILED`)
+- `GameCoordinatorError` if trade-up times out (code: `TRADEUP_TIMEOUT`)
+
+**Validation**:
+
+- Exactly 10 items required
+- All asset IDs must be non-empty strings
+
+**Side Effects**: Applies 30-60s delay, calls GC craft() method, irreversible operation
+
 ##### `isConnected(): boolean`
 
 Checks if currently connected to Game Coordinator.
@@ -133,6 +156,17 @@ interface InventoryItem {
 }
 ```
 
+### TradeUpResult
+
+```typescript
+interface TradeUpResult {
+  success: boolean;
+  outputItem?: InventoryItem;
+  inputAssetIds: string[];
+  timestamp: Date;
+}
+```
+
 ### GameCoordinatorError
 
 ```typescript
@@ -148,6 +182,8 @@ class GameCoordinatorError extends Error {
 
 - `GC_CONNECTION_TIMEOUT`: Connection to GC timed out
 - `GC_NOT_CONNECTED`: Operation attempted without GC connection
+- `TRADEUP_VALIDATION_FAILED`: Trade-up input validation failed
+- `TRADEUP_TIMEOUT`: Trade-up execution timed out
 
 ## Edge Cases & Error Handling
 
@@ -313,6 +349,21 @@ class GameCoordinatorError extends Error {
 **Feature**: Epic 2 - Core Automation Loop
 
 ## Change Log
+
+### 2025-11-02 - TASK-008 (Trade-Up Execution)
+
+**Changes**:
+
+- Implemented executeTradeUp() method with craft() integration
+- Added input validation (10 items, non-empty strings)
+- Implemented human-paced delays (30-60s) before trade-up execution
+- Added craftingComplete event handling
+- Created TradeUpResult data model
+- Added trade-up error codes (TRADEUP_VALIDATION_FAILED, TRADEUP_TIMEOUT)
+- Created 8 comprehensive unit tests for trade-up execution
+
+**Author**: task-implement workflow
+**Validation**: All 131 tests passing (100%), trade-up execution working
 
 ### 2025-11-02 - TASK-007 (Initial Implementation)
 

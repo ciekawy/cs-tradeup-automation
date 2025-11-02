@@ -22,6 +22,7 @@ vi.mock('steam-user', () => ({
 
 vi.mock('globaloffensive', () => ({
   default: class MockGlobalOffensiveFactory extends EventEmitter {
+    craft = vi.fn();
     constructor(public steamClient: any) {
       super();
     }
@@ -492,6 +493,207 @@ describe('GameCoordinatorService', () => {
       // Check it's an EventEmitter with the expected methods
       expect(gcClient.on).toBeDefined();
       expect(gcClient.emit).toBeDefined();
+    });
+  });
+
+  describe('Trade-Up Execution', () => {
+    beforeEach(() => {
+      service = new GameCoordinatorService({
+        steamClient: mockSteamClient as any,
+        connectionTimeout: 5000,
+        operationDelayMin: 100,
+        operationDelayMax: 200,
+      });
+    });
+
+    it('should throw error when not connected', async () => {
+      const assetIds = Array(10)
+        .fill('asset_')
+        .map((_, i) => `asset_${i}`);
+
+      await expect(service.executeTradeUp(assetIds)).rejects.toThrow(GameCoordinatorError);
+      await expect(service.executeTradeUp(assetIds)).rejects.toThrow(/Not connected/);
+    });
+
+    it('should validate exactly 10 items required', async () => {
+      // Connect first
+      const connectPromise = service.connect();
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('connectedToGC');
+      }, 50);
+      vi.advanceTimersByTime(50);
+      await connectPromise;
+
+      // Test with wrong number of items
+      const assetIds = ['asset_1', 'asset_2', 'asset_3'];
+
+      await expect(service.executeTradeUp(assetIds)).rejects.toThrow(GameCoordinatorError);
+      await expect(service.executeTradeUp(assetIds)).rejects.toThrow(/exactly 10 items/);
+    });
+
+    it('should validate asset IDs are non-empty strings', async () => {
+      // Connect first
+      const connectPromise = service.connect();
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('connectedToGC');
+      }, 50);
+      vi.advanceTimersByTime(50);
+      await connectPromise;
+
+      // Test with empty strings
+      const assetIds = Array(10).fill('');
+
+      await expect(service.executeTradeUp(assetIds)).rejects.toThrow(GameCoordinatorError);
+      await expect(service.executeTradeUp(assetIds)).rejects.toThrow(/must be a non-empty string/);
+    });
+
+    it('should execute trade-up successfully', { timeout: 10000 }, async () => {
+      // Connect first
+      const connectPromise = service.connect();
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('connectedToGC');
+      }, 50);
+      vi.advanceTimersByTime(50);
+      await connectPromise;
+
+      // Prepare trade-up
+      const assetIds = Array(10)
+        .fill('asset_')
+        .map((_, i) => `asset_${i}`);
+
+      const tradeUpPromise = service.executeTradeUp(assetIds);
+
+      // Schedule craftingComplete event BEFORE advancing timers
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('craftingComplete', {
+          itemId: 'new_item_123',
+          defIndex: 42,
+          paintIndex: 10,
+          paintSeed: 123,
+          paintWear: 0.15,
+          rarity: 5,
+          quality: 4,
+        });
+      }, 250); // After delay (200ms) + small buffer
+
+      // Advance time for human-paced delay + event using async method
+      await vi.advanceTimersByTimeAsync(300);
+
+      const result = await tradeUpPromise;
+
+      expect(result.success).toBe(true);
+      expect(result.outputItem).toBeDefined();
+      expect(result.outputItem?.itemId).toBe('new_item_123');
+      expect(result.outputItem?.defIndex).toBe(42);
+      expect(result.inputAssetIds).toEqual(assetIds);
+      expect(result.timestamp).toBeInstanceOf(Date);
+    });
+
+    it('should implement human-paced delay before trade-up', { timeout: 10000 }, async () => {
+      // Connect first
+      const connectPromise = service.connect();
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('connectedToGC');
+      }, 50);
+      vi.advanceTimersByTime(50);
+      await connectPromise;
+
+      const assetIds = Array(10)
+        .fill('asset_')
+        .map((_, i) => `asset_${i}`);
+
+      const tradeUpPromise = service.executeTradeUp(assetIds);
+
+      // Schedule craftingComplete event
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('craftingComplete', { itemId: 'test' });
+      }, 250);
+
+      // Advance timers using async method
+      await vi.advanceTimersByTimeAsync(300);
+
+      const result = await tradeUpPromise;
+      expect(result.success).toBe(true);
+    });
+
+    it('should timeout if trade-up takes too long', { timeout: 10000 }, async () => {
+      // Connect first
+      const connectPromise = service.connect();
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('connectedToGC');
+      }, 50);
+      vi.advanceTimersByTime(50);
+      await connectPromise;
+
+      const assetIds = Array(10)
+        .fill('asset_')
+        .map((_, i) => `asset_${i}`);
+
+      const tradeUpPromise = service.executeTradeUp(assetIds, 1000);
+
+      // Advance time past the timeout using async method
+      await vi.advanceTimersByTimeAsync(1500);
+
+      await expect(tradeUpPromise).rejects.toThrow(GameCoordinatorError);
+      await expect(tradeUpPromise).rejects.toThrow(/timed out/);
+    });
+
+    it('should handle trade-up with custom timeout', { timeout: 10000 }, async () => {
+      // Connect first
+      const connectPromise = service.connect();
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('connectedToGC');
+      }, 50);
+      vi.advanceTimersByTime(50);
+      await connectPromise;
+
+      const assetIds = Array(10)
+        .fill('asset_')
+        .map((_, i) => `asset_${i}`);
+
+      const tradeUpPromise = service.executeTradeUp(assetIds, 5000);
+
+      // Schedule craftingComplete event before timeout
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('craftingComplete', {
+          itemId: 'new_item_456',
+          defIndex: 50,
+        });
+      }, 250);
+
+      // Advance time for delay + event using async method
+      await vi.advanceTimersByTimeAsync(300);
+
+      const result = await tradeUpPromise;
+      expect(result.success).toBe(true);
+      expect(result.outputItem?.itemId).toBe('new_item_456');
+    });
+
+    it('should reject non-array input', async () => {
+      // Connect first
+      const connectPromise = service.connect();
+      setTimeout(() => {
+        const gcClient = service.getClient();
+        gcClient.emit('connectedToGC');
+      }, 50);
+      vi.advanceTimersByTime(50);
+      await connectPromise;
+
+      await expect(service.executeTradeUp('not-an-array' as any)).rejects.toThrow(
+        GameCoordinatorError
+      );
+      await expect(service.executeTradeUp('not-an-array' as any)).rejects.toThrow(
+        /Asset IDs must be an array/
+      );
     });
   });
 });
