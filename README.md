@@ -18,6 +18,7 @@ An educational demonstration bot that automates Counter-Strike 2 (CS2) trade-up 
 ### Not a "Get Rich Quick" Scheme
 
 This bot does **NOT** guarantee profits. CS2 trade-ups involve:
+
 - **High fees**: 15% Steam Community Market fees (plus payment processor fees)
 - **Market competition**: Automated traders make manual trading increasingly unprofitable
 - **Price volatility**: Market prices change rapidly during 7-day Trade Protection holds
@@ -174,11 +175,46 @@ docker-compose build --no-cache
 
 ### Persistent Data
 
-The bot stores session tokens and state in a persistent Docker volume:
+The bot stores session tokens and state in persistent storage. You can choose between two approaches:
+
+#### Option 1: Docker Named Volume (Default)
 
 - **Volume**: `bot-data` mounted at `/data` in container
-- **Contents**: `session.json`, `volume.json`, `trade_queue.json`, logs
+- **Pros**: Better portability, managed by Docker
+- **Cons**: Requires Docker commands for backup/access
 - **Backup**: `docker run --rm -v bot-data:/data -v $(pwd):/backup alpine tar czf /backup/bot-data-backup.tar.gz /data`
+- **Restore**: `docker run --rm -v bot-data:/data -v $(pwd):/backup alpine tar xzf /backup/bot-data-backup.tar.gz -C /`
+
+#### Option 2: Bind Mount to Host (Simpler Backups)
+
+To use a local directory instead of a Docker volume:
+
+1. Update `docker-compose.yml` volumes section:
+
+   ```yaml
+   volumes:
+     - ./data:/data # Bind mount to local directory
+     - ./src:/app/src:ro
+     - ./tests:/app/tests:ro
+   ```
+
+2. Create the data directory:
+
+   ```bash
+   mkdir -p data
+   ```
+
+3. Add to `.gitignore`:
+   ```
+   /data/
+   ```
+
+- **Pros**: Direct access to files, standard backup tools (rsync, cp, etc.)
+- **Cons**: Potential permission issues, less portable
+- **Backup**: Simply backup the `./data` directory with any standard tool
+- **Contents**: `session.json`, `volume.json`, `trade_queue.json`, logs in `./data/`
+
+**Recommendation**: Use bind mount for development/testing (easier access to logs and state). Use Docker volume for production deployments (better isolation).
 
 ## 🧪 Testing
 

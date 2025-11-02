@@ -8,35 +8,36 @@ services:
       dockerfile: Dockerfile
     container_name: cs2-tradeup-bot
     restart: unless-stopped
-    
+
     # Environment variables (load from .env file)
     env_file:
       - .env
-    
+
     # Persistent volume for session, config, logs
     volumes:
-      - bot-data:/data
-      - ./src:/app/src:ro  # Hot-reload for development (read-only)
-      - ./tests:/app/tests:ro  # Hot-reload for tests (read-only)
-    
+      - bot-data:/data # Option 1: Docker volume (default, better isolation)
+      # - ./data:/data  # Option 2: Bind mount (uncomment for simpler backups)
+      - ./src:/app/src:ro # Hot-reload for development (read-only)
+      - ./tests:/app/tests:ro # Hot-reload for tests (read-only)
+
     # Health check (optional, for future monitoring)
     healthcheck:
-      test: ["CMD", "node", "-e", "process.exit(0)"]
+      test: ['CMD', 'node', '-e', 'process.exit(0)']
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    
+
     # Network configuration
     networks:
       - bot-network
-    
+
     # Logging configuration
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 
 # Named volume for persistent data
 volumes:
