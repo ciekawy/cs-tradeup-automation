@@ -1,7 +1,7 @@
 # Progress: CS2 Trade-Up Educational Bot
 
 **Last Updated**: 2025-11-02  
-**Project Status**: Pre-Implementation (State Initialized)
+**Project Status**: Iteration 1 Story Breakdown Complete (50%)
 
 ## Milestone Completion Overview
 
@@ -10,7 +10,9 @@
 | Research & Discovery | ✅ Complete | 100% | Completed |
 | Technical Design | ✅ Complete | 100% | Completed 2025-11-02 |
 | State Initialization | ✅ Complete | 100% | Completed 2025-11-02 |
-| Implementation Planning | 🔜 Next | 0% | Starting soon |
+| Business Analysis | ✅ Complete | 100% | Completed 2025-11-02 |
+| Story Breakdown | � In Progress | 50% | Iteration 1 complete |
+| Implementation Planning | 📋 Planned | 0% | After stories |
 | Core Automation | 📋 Planned | 0% | Est. 2-3 weeks |
 | Full-Cycle Automation | 📋 Planned | 0% | Est. 3-4 weeks after core |
 | Testing & Validation | 📋 Planned | 0% | Est. 1 week after automation |
@@ -53,7 +55,7 @@
 - [x] Create techContext.md (technology stack separated from features)
 - [x] Create activeContext.md (current work context)
 - [x] Create progress.md (this file)
-- [x] Create retro-inbox.md (next)
+- [x] Create retro-inbox.md (learning capture)
 
 **Key Outcomes**:
 - Scope expanded to include full-cycle automation
@@ -61,17 +63,68 @@
 - Web dashboard and LLM features added to future scope
 - State files properly organized (tech vs. product concerns separated)
 
-### 🔜 Phase 4: Implementation Planning (0%)
-- [ ] Run `/implementation-plan.md` workflow for Phase 1 (Core Automation)
-- [ ] Create GitHub Epic for Core Automation
-- [ ] Create GitHub Stories for core features
-- [ ] Create GitHub Tasks for implementation work
-- [ ] Run `/implementation-plan.md` workflow for Phase 2 (Full-Cycle Automation)
-- [ ] Update WORK_SPEC.md manifest
+### ✅ Phase 4: Business Analysis (100%)
+- [x] Apply walking skeleton principle to ENTIRE project
+- [x] Apply KISS/DRY principles to epic breakdown
+- [x] Revise Epic 1 to only include manual actions
+- [x] Establish cross-epic story prioritization
+- [x] Create GitHub labels (epic, feature, story, task, technical-design)
+- [x] Create Epic 1: Manual Prerequisites (#1)
+- [x] Create Epic 2: Core Automation Loop (#2)
+- [x] Create Epic 3: PoC Validation (#3)
+- [x] Create Epic 4: Full-Cycle Automation (#4)
+- [x] Create Epic 5: Risk Management (#5)
+- [x] Create Epic 6: Educational Content (#6)
+- [x] Update WORK_SPEC.md manifest with GitHub Epic links
+- [x] Update activeContext.md with current status
 
-**Estimated Timeline**: 1-2 weeks
+**Key Outcomes**:
+- 6 GitHub Epic issues created with comprehensive business context
+- Walking skeleton approach applied across all epics (not just one)
+- KISS/DRY principles followed to avoid overengineering
+- Cross-epic story prioritization plan established for continuous progress
+- WORK_SPEC.md updated with all GitHub Epic links
 
-### 📋 Phase 5: Core Automation Implementation (0%)
+**GitHub Epics**:
+- [Epic 1: Manual Prerequisites](https://github.com/ciekawy/cs-tradeup-automation/issues/1)
+- [Epic 2: Core Automation Loop](https://github.com/ciekawy/cs-tradeup-automation/issues/2)
+- [Epic 3: PoC Validation](https://github.com/ciekawy/cs-tradeup-automation/issues/3)
+- [Epic 4: Full-Cycle Automation](https://github.com/ciekawy/cs-tradeup-automation/issues/4)
+- [Epic 5: Risk Management](https://github.com/ciekawy/cs-tradeup-automation/issues/5)
+- [Epic 6: Educational Content](https://github.com/ciekawy/cs-tradeup-automation/issues/6)
+
+### 🔄 Phase 5: Story Breakdown (50%)
+- [x] Run `/functional-analyze.md` workflow for Epic 1 (Manual Prerequisites)
+- [x] Create GitHub Story #7 linked to Epic 1
+- [x] Update WORK_SPEC.md with story link
+- [x] Run `/functional-analyze.md` for Epic 2 (Core Automation Loop)
+- [x] Create GitHub Stories #8, #9, #10 linked to Epic 2
+- [x] Update WORK_SPEC.md with Epic 2 story links
+- [x] Run `/functional-analyze.md` for Epic 3 (PoC Validation)
+- [x] Create GitHub Story #11 linked to Epic 3
+- [x] Update WORK_SPEC.md with Epic 3 story link
+- [ ] Run `/functional-analyze.md` for Epic 4 (Full-Cycle Automation)
+- [ ] Run `/functional-analyze.md` for Epic 5 (Risk Management)
+- [ ] Run `/functional-analyze.md` for Epic 6 (Educational Content)
+- [ ] Prioritize stories across epics following walking skeleton
+
+**Progress**: 3 of 6 epics completed (50%) - **Iteration 1 fully specified!**
+**Epic 1**: [Story #7 - Steam Test Account Setup](https://github.com/ciekawy/cs-tradeup-automation/issues/7)
+**Epic 2**: [Story #8 - Docker Infrastructure](https://github.com/ciekawy/cs-tradeup-automation/issues/8), [Story #9 - Steam Auth](https://github.com/ciekawy/cs-tradeup-automation/issues/9), [Story #10 - GC Protocol](https://github.com/ciekawy/cs-tradeup-automation/issues/10)
+**Epic 3**: [Story #11 - PoC Validation](https://github.com/ciekawy/cs-tradeup-automation/issues/11)
+**Estimated Timeline**: Iteration 1 complete, ready for implementation planning
+
+### 📋 Phase 6: Implementation Planning (0%)
+**Status**: Awaiting story breakdown completion
+
+**Planned Activities**:
+- [ ] Run `/implementation-plan.md` workflow to break stories into tasks
+- [ ] Create GitHub Tasks linked to stories
+- [ ] Prioritize tasks for Iteration 1 (minimal viable automation)
+
+**Estimated Timeline**: 1 week
+
+### 📋 Phase 7: Core Automation Implementation (0%)
 **Status**: Awaiting implementation planning completion
 
 **Planned Components**:
@@ -93,7 +146,7 @@
 
 **Estimated Timeline**: 2-3 weeks
 
-### 📋 Phase 6: Full-Cycle Automation Implementation (0%)
+### 📋 Phase 8: Full-Cycle Automation Implementation (0%)
 **Status**: Awaiting core automation completion
 
 **Planned Components**:
@@ -114,34 +167,6 @@
 - P&L tracking provides accurate financial reporting
 
 **Estimated Timeline**: 3-4 weeks after core automation
-
-### 📋 Phase 7: Testing & Validation (0%)
-**Status**: Awaiting implementation completion
-
-**Planned Activities**:
-- [ ] Unit tests for EV calculations
-- [ ] Unit tests for float optimization
-- [ ] Integration tests for Steam API interactions
-- [ ] End-to-end tests for full trade-up cycle
-- [ ] Performance testing (resource usage validation)
-- [ ] Security testing (credential management, container isolation)
-- [ ] Steam ToS risk validation (low volume, human pacing)
-
-**Estimated Timeline**: 1 week
-
-### 📋 Phase 8: Documentation & Education (Ongoing)
-**Status**: Ongoing throughout project
-
-**Planned Deliverables**:
-- [ ] Setup guide (local macOS + VPS deployment)
-- [ ] Trading economics educational module
-- [ ] Risk disclosure document (comprehensive ToS violation warnings)
-- [ ] Youth-focused content (easy profit myth-busting)
-- [ ] Comparison guide (manual vs. automated trading)
-- [ ] API documentation
-- [ ] Troubleshooting guide
-
-**Estimated Timeline**: Ongoing + 1 week finalization
 
 ## Component Status
 
@@ -174,7 +199,7 @@
 ## Risks & Blockers
 
 ### Current Blockers
-**None** - State initialization complete, ready for implementation planning
+**None** - Epic structure defined, ready for story breakdown
 
 ### Risk Status
 | Risk | Likelihood | Impact | Mitigation Status |
@@ -182,7 +207,7 @@
 | Steam Account Restrictions | Medium | High | ✅ Mitigated (low volume, test account) |
 | Steam Policy Changes | Low | High | ⚠️ Monitor announcements |
 | Library API Changes | Low | Medium | ✅ Mitigated (pin versions) |
-| Scope Creep | Medium | Medium | ✅ Mitigated (clear phase gates) |
+| Scope Creep | Medium | Medium | ✅ Mitigated (clear phase gates, KISS/DRY) |
 
 ## Key Metrics
 
@@ -190,7 +215,8 @@
 - **Sprint 1 (Research)**: ✅ Complete (SPIKE investigations)
 - **Sprint 2 (Technical Design)**: ✅ Complete (7 TD documents)
 - **Sprint 3 (State Init)**: ✅ Complete (all state files)
-- **Sprint 4 (Implementation Planning)**: 🔜 Starting soon
+- **Sprint 4 (Business Analysis)**: ✅ Complete (6 GitHub Epics)
+- **Sprint 5 (Story Breakdown)**: 🔜 Starting soon
 
 ### Code Quality (Target Metrics)
 - Test Coverage: Target 80%+ for core logic
@@ -206,16 +232,16 @@
 
 ## Next Milestones
 
-1. **Create retro-inbox.md** (immediate)
-2. **Run /implementation-plan.md workflow** (Phase 1: Core Automation)
-3. **Begin core implementation** (Steam auth + GC protocol)
-4. **First successful trade-up execution** (validation milestone)
-5. **Complete full-cycle automation** (buy → craft → sell)
-6. **Evaluate optional features** (web dashboard, LLM SPIKE research)
+1. **Run /functional-analyze.md workflow** (create GitHub Stories for each epic)
+2. **Prioritize stories across epics** (walking skeleton approach)
+3. **Run /implementation-plan.md workflow** (break stories into tasks)
+4. **Begin Iteration 1 implementation** (minimal viable automation)
+5. **First successful trade-up execution** (validation milestone)
+6. **Complete full-cycle automation** (buy → craft → sell)
 
 ---
 
 **Overall Project Status**: 🟢 On Track  
-**Current Phase**: State Initialization Complete  
+**Current Phase**: Iteration 1 Story Breakdown Complete (50%)  
 **Next Phase**: Implementation Planning  
 **Estimated Completion**: 8-10 weeks from start of implementation

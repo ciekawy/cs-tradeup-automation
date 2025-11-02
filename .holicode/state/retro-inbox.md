@@ -1,6 +1,25 @@
 # Retrospective Inbox: CS2 Trade-Up Educational Bot
 
-**Last Updated**: 2025-11-02  
+**Last Updated**: 2025-11-02
+
+## 2025-11-02 - Epic 2 Story Breakdown (Functional Analysis)
+
+**Process Insights**:
+- Progressive acceptance criteria development worked well (3 rounds per story)
+- User preference for plain text logging over JSON reduced complexity
+- Steam ban mitigation strategies successfully integrated into all stories
+- Granularity decision (3 focused stories) balanced clarity with manageability
+
+**Key Learnings**:
+- EARS format (Given/When/Then) provides clear, testable acceptance criteria
+- Incorporating security/mitigation requirements early prevents rework
+- Walking skeleton principle guides appropriate scope boundaries
+- User feedback on technical choices (Node 24, plain text logs) streamlined decisions
+
+**Workflow Efficiency**:
+- Combined questions for Stories 2 & 3 saved time without losing clarity
+- Reading mitigation report before story creation ensured comprehensive coverage
+- GitHub issue creation via `gh` CLI faster than MCP tools for this use case
 **Purpose**: Capture learnings, insights, and process improvements throughout project execution
 
 ## What is This File?
@@ -26,6 +45,109 @@ This is a living document where we capture:
 - Archive processed entries to `analysis/reports/` for historical reference
 
 ## Active Entries
+
+### 2025-11-02: Epic 3 Story Breakdown - Real GC Testing & Mitigation Validation
+
+**Context**: Executed `/functional-analyze.md` workflow to break down Epic 3 (PoC Validation) into user stories
+
+**Learnings**:
+1. **Real Steam GC Testing Confirmed**: User questioned whether to build mock trade-up engine. Decision: Test against real Steam GC with actual test account. Rationale: Epic 3 is about proving the approach works with real infrastructure, not validating test harnesses. Building mock engine would be premature optimization.
+
+2. **Mitigation Validation Critical**: Steam ban mitigation strategies must be validated during PoC testing (human pacing 30-300s delays, resource limits ≤2GB Docker/≤1GB RAM, rate limiting, session persistence). These aren't just implementation requirements - they're validation acceptance criteria.
+
+3. **Docker Image Size Flexibility**: User feedback: ≤2GB Docker image acceptable (not strict 500MB limit), but investigate if larger. Practical constraint vs. optimization target distinction clarified.
+
+4. **Single Comprehensive Story Effective**: For validation epic, 8 acceptance criteria in single story works well (end-to-end testing, error handling, session persistence, mitigation verification, documentation). Validation activities are tightly coupled and sequential.
+
+**Process Improvements**:
+- Add "Testing Strategy" question earlier in functional-analyze workflow (real vs. mock decision)
+- Consider mitigation report review as standard step for all epics (not just manual prerequisites)
+- Resource usage criteria should differentiate between hard limits and investigation triggers
+
+**Action Items**:
+- [x] GitHub Story issue #11 created for Epic 3 with 8 EARS acceptance criteria
+- [x] WORK_SPEC.md manifest updated with story link
+- [x] State files updated (activeContext, retro-inbox, progress)
+- [x] Iteration 1 (Epics 1-2-3) fully specified - ready for implementation planning!
+
+**Impact**: PoC Validation story provides clear path to prove walking skeleton works end-to-end. Real GC testing approach ensures validation catches real-world quirks. Completing this story achieves minimal viable automation proof-of-concept.
+
+---
+
+### 2025-11-02: Business Analysis Workflow - Walking Skeleton Applied to Epic Structure
+
+**Context**: Executed `/business-analyze.md` workflow to create GitHub Epic structure for CS2 trade-up bot project
+
+**Learnings**:
+1. **Walking Skeleton Principle at Epic Level**: Initially proposed applying walking skeleton only to Epic 2 (Core Automation), but user correctly identified this should apply to ENTIRE project structure. Key insight: Story prioritization across epics enables continuous progress, not epic-by-epic development.
+
+2. **KISS/DRY Applied to Epic Breakdown**: Avoided overengineering by:
+   - Deferring complexity (e.g., Monte Carlo simulation → deterministic calculation first)
+   - Manual-first automation (e.g., manual input selection → automated buy orders)
+   - Clear "out of scope" boundaries for each epic
+   - No premature abstractions or advanced features
+
+3. **Epic 1 Scope Correction**: Initially included automatable setup tasks (Docker, repo structure). User feedback: Epic 1 should ONLY contain truly manual actions. Moved all automatable setup to Epic 2 where Cline can handle them.
+
+4. **Cross-Epic Story Prioritization Success**: Structured epics to support pulling work from multiple epics per iteration:
+   - Iteration 1: Stories from Epics 1-2-3 (minimal viable automation)
+   - Iteration 2: Stories from Epics 4-5 (add intelligence and safety)
+   - Iteration 3: Stories from Epic 4-5 (market integration)
+   - Iteration 4: Stories from Epic 6 (polish and document)
+
+5. **GitHub-First Workflow Effective**: Creating GitHub Epic issues directly provided:
+   - Single source of truth for task management
+   - Clear business value and scope documentation
+   - Easy linking in WORK_SPEC.md manifest
+   - Future story breakdown can reference parent epics
+
+**Process Improvements**:
+- Consider adding "Walking Skeleton Checklist" to business-analyze workflow template
+- Add explicit "Manual vs Automatable" decision tree for Epic 1 scope
+- Include cross-epic prioritization guidance in workflow DoD
+
+**Action Items**:
+- [x] All 6 GitHub Epics created successfully
+- [x] WORK_SPEC.md updated with epic links
+- [x] State files updated (activeContext, progress)
+- [x] Epic 1 story breakdown complete (Issue #7)
+- [ ] Next: Run `/functional-analyze.md` for remaining epics (2-6)
+
+**Impact**: Clear epic structure established with walking skeleton principles embedded throughout. Team can now proceed with story breakdown knowing continuous progress approach is designed in from the start.
+
+---
+
+### 2025-11-02: Epic 1 Story Breakdown - Comprehensive Single Story Approach
+
+**Context**: Executed `/functional-analyze.md` workflow to break down Epic 1 (Manual Prerequisites) into user stories
+
+**Learnings**:
+1. **Single Comprehensive Story Chosen**: User selected single story approach over 4 focused stories. Key trade-off: Single checklist simplifies tracking manual setup vs. granular milestone tracking. For manual prerequisites, comprehensive approach works well.
+
+2. **Mitigation Report Integration Critical**: Steam ban mitigation research (`.holicode/analyse/reports/mitigation-to-avoid-steam-ban-in-eductional-bot.md`) provided essential requirements:
+   - $5 spending requirement (upgrade from "limited" account status)
+   - 15-day wait period after Steam Guard setup
+   - Normal user activity baseline (avatar, playtime) to avoid bot detection
+   - Educational purpose documentation for potential Steam Support inquiries
+
+3. **EARS Format Effective for Manual Tasks**: Given/When/Then structure worked well for manual prerequisites (8 acceptance criteria covering verification, legitimization, 2FA, activity, API keys, credentials, documentation, isolation)
+
+4. **GitHub Issue Creation Success**: Story issue #7 created successfully with comprehensive acceptance criteria, dependencies, technical notes, and clear Definition of Done
+
+**Process Improvements**:
+- Consider adding "Check analysis reports" step to functional-analyze workflow DoR
+- Manual prerequisite stories benefit from comprehensive approach vs. granular breakdown
+- EARS format scales well to 8+ acceptance criteria when properly structured
+
+**Action Items**:
+- [x] GitHub Story issue #7 created for Epic 1
+- [x] WORK_SPEC.md manifest updated with story link
+- [x] State files updated (activeContext, retro-inbox, progress)
+- [ ] Next: Continue with Epic 2 story breakdown
+
+**Impact**: Epic 1 now has actionable story with clear acceptance criteria. User can execute manual setup with comprehensive checklist covering all security and mitigation requirements.
+
+---
 
 ### 2025-11-02: State Initialization Learnings
 

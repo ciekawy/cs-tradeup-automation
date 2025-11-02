@@ -1,8 +1,8 @@
-# Work Specification: HoliCode Framework
+# Work Specification: CS2 Trade-Up Educational Bot
 
 **Status:** active  
-**Created:** 2025-08-04  
-**Last Updated:** 2025-08-09  
+**Created:** 2025-11-02  
+**Last Updated:** 2025-11-02  
 **Total Context Size:** <2KB (optimized for AI context loading)
 
 ## ⚠️ IMPORTANT: GitHub is Primary Source
@@ -13,15 +13,24 @@
 - Local specs in `.holicode/specs/` are for technical details only
 
 ## Project Overview
-AI-assisted development framework with GitHub-driven task management and specification-driven workflows.
+Educational automation platform demonstrating CS2 skin trading mechanics through full-cycle trade-up automation, with comprehensive education on trading economics, risk management, and the competitive landscape.
 
 ## Features (GitHub Epics)
 <!-- GitHub Epics linked here by github-sync workflow -->
-<!-- Example: - [User Authentication](https://github.com/holagence/holicode/issues/123) -->
+- [EPIC 1: Manual Prerequisites](https://github.com/ciekawy/cs-tradeup-automation/issues/1) - Essential manual foundation (Steam account, 2FA, API keys)
+- [EPIC 2: Core Automation Loop](https://github.com/ciekawy/cs-tradeup-automation/issues/2) - Walking skeleton (Steam auth, GC protocol, single trade-up)
+- [EPIC 3: PoC Validation](https://github.com/ciekawy/cs-tradeup-automation/issues/3) - End-to-end validation and technical proof
+- [EPIC 4: Full-Cycle Automation](https://github.com/ciekawy/cs-tradeup-automation/issues/4) - Complete automation (EV calc, float opt, buy/sell integration)
+- [EPIC 5: Risk Management](https://github.com/ciekawy/cs-tradeup-automation/issues/5) - Safety controls (volume limits, rate limiting, monitoring)
+- [EPIC 6: Educational Content](https://github.com/ciekawy/cs-tradeup-automation/issues/6) - Comprehensive documentation and risk disclosures
 
 ## Active Stories (GitHub Issues)
 <!-- GitHub Stories linked here by github-sync workflow -->
-<!-- Example: - [Login Form](https://github.com/holagence/holicode/issues/124) (Epic: #123) -->
+- [STORY: Steam Test Account Setup with Security & Mitigation](https://github.com/ciekawy/cs-tradeup-automation/issues/7) (Epic: #1 - Manual Prerequisites)
+- [STORY: Docker Infrastructure & Project Setup](https://github.com/ciekawy/cs-tradeup-automation/issues/8) (Epic: #2 - Core Automation Loop)
+- [STORY: Steam Authentication & Session Management](https://github.com/ciekawy/cs-tradeup-automation/issues/9) (Epic: #2 - Core Automation Loop)
+- [STORY: GC Protocol & Trade-Up Execution](https://github.com/ciekawy/cs-tradeup-automation/issues/10) (Epic: #2 - Core Automation Loop)
+- [STORY: PoC Validation - End-to-End Testing & Documentation](https://github.com/ciekawy/cs-tradeup-automation/issues/11) (Epic: #3 - PoC Validation)
 
 ## Current Tasks (GitHub Issues)
 <!-- GitHub Tasks linked here by github-sync workflow -->
