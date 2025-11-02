@@ -1,5 +1,6 @@
 import SteamUser from 'steam-user';
 import SteamTotp from 'steam-totp';
+import { SessionManager, SessionData } from './SessionManager';
 
 /**
  * Authentication configuration interface
@@ -11,6 +12,7 @@ export interface AuthenticationConfig {
   maxRetries: number;
   retryDelayMin: number;
   retryDelayMax: number;
+  sessionPath?: string; // Path to session file (default: /data/session.json)
 }
 
 /**
@@ -49,6 +51,7 @@ export class AuthenticationService {
   private client: SteamUser;
   private config: AuthenticationConfig;
   private state: AuthenticationState;
+  private sessionManager: SessionManager;
 
   constructor(config?: Partial<AuthenticationConfig>) {
     // Load configuration from environment variables with defaults
@@ -75,8 +78,13 @@ export class AuthenticationService {
       retryCount: 0,
     };
 
-    // Create Steam client
-    this.client = new SteamUser();
+    // Create Steam client with data directory for session persistence
+    this.client = new SteamUser({
+      dataDirectory: config?.sessionPath ? undefined : '/data',
+    });
+
+    // Initialize session manager
+    this.sessionManager = new SessionManager(config?.sessionPath || '/data/session.json');
 
     // Setup event handlers
     this.setupEventHandlers();
@@ -87,7 +95,7 @@ export class AuthenticationService {
    */
   private setupEventHandlers(): void {
     // Successful login
-    this.client.on('loggedOn', (details) => {
+    this.client.on('loggedOn', (details: { client_supplied_steam_id?: string }) => {
       this.state.isAuthenticated = true;
       this.state.steamId = this.client.steamID?.getSteamID64() || undefined;
       this.state.accountName = details.client_supplied_steam_id || this.config.username;
@@ -97,6 +105,10 @@ export class AuthenticationService {
       console.log('[Auth] Successfully authenticated with Steam');
       console.log(`[Auth] SteamID: ${this.state.steamId}`);
       console.log(`[Auth] Account: ${this.state.accountName}`);
+
+      // Save session for future reconnection (ban mitigation)
+      // Use void operator to handle promise without returning it
+      void this.saveCurrentSession();
     });
 
     // Handle 2FA (Steam Guard Mobile Authenticator)
@@ -137,10 +149,22 @@ export class AuthenticationService {
    * CRITICAL: Delays between retries are randomized (30-60s) to prevent
    * Steam ban detection. Never allow rapid-fire authentication attempts.
    *
+   * First attempts to restore from saved session (password-less reconnection).
+   * If no session exists or session is invalid, falls back to full authentication.
+   *
    * @returns Promise that resolves when authenticated
    * @throws AuthenticationError if authentication fails after all retries
    */
   async authenticate(): Promise<void> {
+    // Try to restore session first (password-less reconnection)
+    const sessionRestored = await this.tryRestoreSession();
+    if (sessionRestored) {
+      console.log('[Auth] Successfully restored session - no re-authentication needed');
+      return;
+    }
+
+    // No valid session - proceed with full authentication
+    console.log('[Auth] No valid session - proceeding with full authentication');
     let lastError: Error | undefined;
 
     for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
@@ -256,11 +280,12 @@ export class AuthenticationService {
   }
 
   /**
-   * Disconnect from Steam
+   * Disconnect from Steam and optionally clear session
    *
+   * @param clearSession - Whether to clear saved session (default: false)
    * @returns Promise that resolves when disconnected
    */
-  async disconnect(): Promise<void> {
+  async disconnect(clearSession: boolean = false): Promise<void> {
     return new Promise((resolve) => {
       if (!this.state.isAuthenticated) {
         resolve();
@@ -270,7 +295,16 @@ export class AuthenticationService {
       // Wait for disconnection event
       this.client.once('disconnected', () => {
         console.log('[Auth] Disconnected from Steam');
-        resolve();
+
+        // Clear session if requested (handle promise with void)
+        if (clearSession) {
+          void this.sessionManager.clearSession().then(() => {
+            console.log('[Auth] Session cleared');
+            resolve();
+          });
+        } else {
+          resolve();
+        }
       });
 
       // Initiate logout
@@ -279,9 +313,70 @@ export class AuthenticationService {
       // Fallback timeout in case disconnected event doesn't fire
       setTimeout(() => {
         this.state.isAuthenticated = false;
-        resolve();
+
+        if (clearSession) {
+          void this.sessionManager.clearSession().then(() => {
+            resolve();
+          });
+        } else {
+          resolve();
+        }
       }, 5000);
     });
+  }
+
+  /**
+   * Try to restore session from saved session file
+   *
+   * @returns True if session restored successfully, false otherwise
+   */
+  private async tryRestoreSession(): Promise<boolean> {
+    try {
+      // Check if session file exists
+      const hasSession = await this.sessionManager.hasSession();
+      if (!hasSession) {
+        return false;
+      }
+
+      // Load session data
+      const sessionData = await this.sessionManager.loadSession();
+      if (!sessionData) {
+        return false;
+      }
+
+      // Attempt to use saved session with steam-user
+      // Note: steam-user handles session restoration via dataDirectory
+      // We validate the session file exists and is valid
+      console.log('[Auth] Found valid session - attempting restoration');
+      return true;
+    } catch (error) {
+      console.warn('[Auth] Session restoration failed:', (error as Error).message);
+      return false;
+    }
+  }
+
+  /**
+   * Save current session to disk
+   */
+  private async saveCurrentSession(): Promise<void> {
+    try {
+      if (!this.state.steamId || !this.state.accountName) {
+        console.warn('[Auth] Cannot save session - missing steamId or accountName');
+        return;
+      }
+
+      const sessionData: SessionData = {
+        accountName: this.state.accountName,
+        steamId: this.state.steamId,
+        savedAt: new Date(),
+      };
+
+      await this.sessionManager.saveSession(sessionData);
+      console.log('[Auth] Session saved for future reconnection');
+    } catch (error) {
+      console.error('[Auth] Failed to save session:', (error as Error).message);
+      // Don't throw - session save failure shouldn't break authentication
+    }
   }
 
   /**

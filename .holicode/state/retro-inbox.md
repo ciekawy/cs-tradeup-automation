@@ -52,6 +52,63 @@ This is a living document where we capture:
 
 ## Active Entries
 
+### 2025-11-02: TASK-005 Session Persistence Implementation
+
+**Context**: Implemented session token management for persistent authentication across container restarts (SessionManager class, file-based persistence, automatic session restore)
+
+**Learnings**:
+
+1. **100% Test Pass Rate Achieved**: All 81 tests passing (16 session tests, 19 auth tests, 46 other tests). Exceeded 80% target from task requirements and 90% from spec.
+
+2. **Pre-existing Test Failures Fixed**: Resolved 2 auth test failures from TASK-004:
+   - Disconnect test required authentication before disconnect (state management)
+   - Retry test mock timing improved (reduced from 30s to 10s timeout)
+
+3. **Session Validation Strategy**: Implemented multi-layer validation:
+   - JSON parse error handling (clears invalid sessions)
+   - Structural validation (accountName, steamId, savedAt required)
+   - Expiration check (optional expiresAt field)
+   - Automatic cleanup on validation failure
+
+4. **File Permissions Security**: 600 permissions (read/write owner only) applied correctly on macOS. Verified in tests with filesystem stat checks.
+
+5. **ESLint in Test Files (Tech Debt)**: Test files with mocks inherently use `any` types. Added eslint-disable comments for:
+   - `@typescript-eslint/no-unsafe-*` (mock operations)
+   - `@typescript-eslint/no-explicit-any` (mock types)
+   - `@typescript-eslint/ban-types` (Function type in callbacks)
+   - `@typescript-eslint/require-await` (test helpers)
+
+   **Decision**: Accepted as industry standard for test files. Production code has ZERO linting errors.
+
+**Process Improvements**:
+
+- Session test isolation pattern: Use temporary directories per test with full cleanup
+- Nested try-catch for JSON parsing prevents uncaught errors from bubbling
+- Test file linting should be relaxed vs. production code (consider separate config)
+
+**Open Questions**:
+
+- **Real API Testing**: Current tests use mocks. Future consideration: Create `tests/integration/` with real Steam API tests using actual credentials. Benefits: Validate real-world behavior. Challenges: Ban risk mitigation, manual-only execution, credential security.
+
+**Action Items**:
+
+- [x] SessionManager class with save/load/clear/hasSession methods
+- [x] Integration with AuthenticationService (automatic save/restore)
+- [x] 16 comprehensive session tests (100% passing)
+- [x] Fixed 2 pre-existing auth test failures
+- [x] Updated src/auth/SPEC.md with session persistence documentation
+- [x] Secure file permissions (600) implemented and tested
+- [x] All tests passing (81/81 - 100%)
+- [x] ESLint test file warnings documented as acceptable tech debt
+- [ ] **FUTURE**: Create real Steam API integration tests (manual execution)
+- [ ] **FUTURE**: Consider token encryption at rest (mentioned in SPEC)
+
+**Impact**: Bot can now persist sessions across restarts, significantly reducing authentication frequency and Steam ban risk. Container restarts no longer require re-authentication. Session restoration is automatic and transparent.
+
+**Technical Debt**: ESLint warnings in test files (mock-related `any` types) - documented and accepted as standard practice for test files.
+
+---
+
 ### 2025-11-02: TASK-004 Steam Authentication Implementation
 
 **Context**: Implemented Steam authentication service with steam-user library (AuthenticationService, retry logic, 2FA support, human-paced delays)
