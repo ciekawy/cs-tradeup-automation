@@ -6,56 +6,65 @@
 ## Current Focus
 
 ### What We're Working On
-**Epic 3 Story Breakdown Complete - Iteration 1 Fully Planned!**
-- Created comprehensive validation story for Epic 3: PoC Validation
-- Issue #11: PoC Validation - End-to-End Testing & Documentation (8 acceptance criteria)
-- All EARS format acceptance criteria validated and approved
-- Incorporated Steam ban mitigation validation (human pacing 30-300s, resource limits)
-- Real Steam GC testing strategy confirmed (no mock engine needed)
-- Updated WORK_SPEC.md manifest with story link
-- **Milestone**: Iteration 1 (Epics 1-2-3) fully specified and ready for implementation!
+**Implementation Planning Complete - Iteration 1 Ready to Build!**
+- Created 11 GitHub Task issues breaking down Stories #8, #9, #10, #11
+- Story #7 (Manual Prerequisites) is entirely manual - no code tasks needed
+- Task granularity: Between standard and fine-grained (reasonable educated decisions)
+- All tasks sized XS/S/M (1-4 hours each) for walking skeleton approach
+- Total estimated effort: 21-30 hours (2-4 weeks for walking skeleton)
+- WORK_SPEC.md updated with all task links (#12-#22)
+- **Milestone**: Implementation planning complete, ready to begin coding!
 
 ### Recent Changes (2025-11-02)
 
-**Business Analysis Workflow Complete**:
-- Created 6 GitHub Epic issues with comprehensive business context
-- Applied walking skeleton principle across all epics (not just one)
-- Followed KISS/DRY principles to avoid overengineering
-- Established cross-epic story prioritization for continuous progress
+**Implementation Planning Workflow Complete**:
+- Broke down 5 GitHub Stories into 11 implementation tasks
+- Created size labels (size-XS, size-S, size-M) for task management
+- Applied reasonable task granularity (between standard and fine-grained)
+- All tasks include: complexity scores, effort estimates, dependencies, acceptance criteria
+- Steam ban mitigation requirements integrated into every applicable task
+- Component SPECs referenced: infrastructure, auth, gamecoordinator
 
-**GitHub Epics Created**:
-- Epic 1: Manual Prerequisites (#1) - Manual-only setup actions
-- Epic 2: Core Automation Loop (#2) - Walking skeleton foundation
-- Epic 3: PoC Validation (#3) - Prove it works end-to-end
-- Epic 4: Full-Cycle Automation (#4) - Extend capabilities (EV, float, buy/sell)
-- Epic 5: Risk Management (#5) - Add safety controls
-- Epic 6: Educational Content (#6) - Comprehensive documentation
+**GitHub Tasks Created** (Issues #12-#22):
+- Story #8 (Infrastructure): TASK-001, TASK-002, TASK-003
+- Story #9 (Authentication): TASK-004, TASK-005, TASK-006
+- Story #10 (GC Protocol): TASK-007, TASK-008, TASK-009
+- Story #11 (Validation): TASK-010, TASK-011
 
 **WORK_SPEC.md Updated**:
-- Added all 6 GitHub Epic links
-- Updated project overview for CS2 trade-up bot
-- Ready for story breakdown via `/functional-analyze.md` workflow
+- Added all 11 GitHub Task links organized by story
+- Manifest now reflects complete Iteration 1 planning
+- Ready for implementation via `/task-implement.md` workflow
 
 ## Immediate Next Steps
 
-### 1. Begin Implementation Planning
-- **Next**: Run `/implementation-plan.md` for prioritized stories
-- Iteration 1: Minimal viable automation (Epics 1-2-3) ✅ FULLY SPECIFIED
-  - Epic 1: Story #7 ✅ COMPLETE
-  - Epic 2: Stories #8, #9, #10 ✅ COMPLETE
-  - Epic 3: Story #11 ✅ COMPLETE
-- Ready to start implementation with highest-priority stories
-- Consider starting with Epic 2 stories (Core Automation Loop) for walking skeleton
+### 1. Begin Implementation Execution
+- **Next**: Run `/task-implement.md` workflow to start coding
+- **Recommended Order**:
+  1. Foundation: TASK-001 → TASK-002 → TASK-003 (Docker infrastructure)
+  2. Authentication: TASK-004 → TASK-005 → TASK-006 (Steam auth)
+  3. Automation: TASK-007 → TASK-008 → TASK-009 (GC protocol)
+  4. Validation: TASK-010 → TASK-011 (PoC testing)
+- All tasks have clear dependencies and acceptance criteria
+- Component SPECs will be created during implementation (co-located with code)
 
-### 2. Future Story Breakdown (Iterations 2-4)
+### 2. Story #7 (Manual Prerequisites) - User Action Required
+- This story is entirely manual setup (no code tasks)
+- User must complete 8 acceptance criteria manually:
+  - Create Steam test account
+  - Add $5 for account legitimization
+  - Enable Steam Guard Mobile Authenticator (15-day wait)
+  - Generate Steam API key
+  - Secure credential storage
+  - Document educational purpose
+  - Verify account isolation
+- Should be started in parallel with implementation tasks
+
+### 3. Future Story Breakdown (Iterations 2-4)
 - Epic 4: Full-Cycle Automation (Iteration 2 + 3)
 - Epic 5: Risk Management (Iteration 2 + 3)
 - Epic 6: Educational Content (Iteration 4)
 - Break down as needed when ready to begin each iteration
-
-### 2. Implementation Planning (After Stories)
-- Run `/implementation-plan.md` workflow to break stories into tasks
-- Begin implementation with highest-priority stories from Iteration 1
 
 ### 3. Optional SPIKE Research (Post-PoC)
 - **Web Dashboard SPIKE**: Evaluate user demand and development effort

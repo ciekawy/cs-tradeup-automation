@@ -34,7 +34,25 @@ Educational automation platform demonstrating CS2 skin trading mechanics through
 
 ## Current Tasks (GitHub Issues)
 <!-- GitHub Tasks linked here by github-sync workflow -->
-<!-- Example: - [TASK-001: Implement Auth Service](https://github.com/holagence/holicode/issues/125) (Story: #124) -->
+
+### Story #8: Docker Infrastructure & Project Setup
+- [TASK-001: Initialize pnpm workspace with TypeScript configuration](https://github.com/ciekawy/cs-tradeup-automation/issues/12) (Story: #8)
+- [TASK-002: Create Docker infrastructure (Dockerfile + docker-compose)](https://github.com/ciekawy/cs-tradeup-automation/issues/13) (Story: #8)
+- [TASK-003: Setup development tooling and documentation](https://github.com/ciekawy/cs-tradeup-automation/issues/14) (Story: #8)
+
+### Story #9: Steam Authentication & Session Management
+- [TASK-004: Implement Steam authentication with steam-user library](https://github.com/ciekawy/cs-tradeup-automation/issues/15) (Story: #9)
+- [TASK-005: Implement session persistence and token management](https://github.com/ciekawy/cs-tradeup-automation/issues/16) (Story: #9)
+- [TASK-006: Add rate limiting and error handling](https://github.com/ciekawy/cs-tradeup-automation/issues/17) (Story: #9)
+
+### Story #10: GC Protocol & Trade-Up Execution
+- [TASK-007: Implement GC protocol connection and inventory retrieval](https://github.com/ciekawy/cs-tradeup-automation/issues/18) (Story: #10)
+- [TASK-008: Implement trade-up execution with craft() method](https://github.com/ciekawy/cs-tradeup-automation/issues/19) (Story: #10)
+- [TASK-009: Add human-paced delays and rate limiting](https://github.com/ciekawy/cs-tradeup-automation/issues/20) (Story: #10)
+
+### Story #11: PoC Validation - End-to-End Testing & Documentation
+- [TASK-010: Execute end-to-end validation tests](https://github.com/ciekawy/cs-tradeup-automation/issues/21) (Story: #11)
+- [TASK-011: Create technical validation report and troubleshooting guide](https://github.com/ciekawy/cs-tradeup-automation/issues/22) (Story: #11)
 
 ## Technical Design Documents (GitHub Issues & Local Files)
 <!-- GitHub TD Issues linked here by github-sync workflow -->
