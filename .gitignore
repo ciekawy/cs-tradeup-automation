@@ -8,10 +8,6 @@
 .vscodium/
 
 
-# HoliCode framework files (not project-specific)
-.clinerules/
-.holicode/scripts/
-.holicode/templates/
 # HoliCode scratch directory (temporary exploration work)
 .holicode/analyse/scratch/
 
