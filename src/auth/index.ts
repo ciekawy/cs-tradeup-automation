@@ -1,3 +1,4 @@
+import path from 'path';
 import SteamUser from 'steam-user';
 import SteamTotp from 'steam-totp';
 import { SessionManager, SessionData } from './SessionManager';
@@ -22,6 +23,8 @@ export interface AuthenticationConfig {
   retryDelayMax: number;
   sessionPath?: string; // Path to session file (default: /data/session.json)
   rateLimiter?: RateLimiterConfig; // Rate limiter configuration
+  servers?: any[]; // For testing with a local emulator
+  httpProxy?: string; // For testing with a local emulator
 }
 
 /**
@@ -99,12 +102,15 @@ export class AuthenticationService {
     };
 
     // Create Steam client with data directory for session persistence
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     this.client = new SteamUser({
-      dataDirectory: config?.sessionPath ? undefined : '/data',
-    });
+      dataDirectory: config?.sessionPath ? path.dirname(config.sessionPath) : '.data',
+      servers: this.config.servers,
+      httpProxy: this.config.httpProxy,
+    } as any);
 
     // Initialize session manager
-    this.sessionManager = new SessionManager(config?.sessionPath || '/data/session.json');
+    this.sessionManager = new SessionManager(config?.sessionPath);
 
     // Initialize rate limiter
     this.rateLimiter = new RateLimiter(config?.rateLimiter);

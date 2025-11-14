@@ -41,7 +41,7 @@ export class SessionManager {
   private readonly sessionPath: string;
   private readonly dataDir: string;
 
-  constructor(sessionPath: string = '/data/session.json') {
+  constructor(sessionPath: string = '.data/session.json') {
     this.sessionPath = sessionPath;
     this.dataDir = path.dirname(sessionPath);
   }

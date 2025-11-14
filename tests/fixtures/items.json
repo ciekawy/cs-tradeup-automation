@@ -1,0 +1,72 @@
+{
+  "47": {
+    "name": "Nova | Toy Soldier",
+    "item_class": "weapon_nova",
+    "item_name": "#SFUI_WPNHUD_Nova",
+    "item_description": "#CSGO_WPNDESC_Nova",
+    "item_rarity": "milspec"
+  },
+  "290": {
+    "name": "P250 | Cassette",
+    "item_class": "weapon_p250",
+    "item_name": "#SFUI_WPNHUD_P250",
+    "item_description": "#CSGO_WPNDESC_P250",
+    "item_rarity": "milspec"
+  },
+  "359": {
+    "name": "P90 | Freight",
+    "item_class": "weapon_p90",
+    "item_name": "#SFUI_WPNHUD_P90",
+    "item_description": "#CSGO_WPNDESC_P90",
+    "item_rarity": "milspec"
+  },
+  "801": {
+    "name": "UMP-45 | Metal Flowers",
+    "item_class": "weapon_ump45",
+    "item_name": "#SFUI_WPNHUD_UMP45",
+    "item_description": "#CSGO_WPNDESC_UMP45",
+    "item_rarity": "milspec"
+  },
+  "642": {
+    "name": "Five-SeveN | Coolant",
+    "item_class": "weapon_fiveseven",
+    "item_name": "#SFUI_WPNHUD_FiveSeven",
+    "item_description": "#CSGO_WPNDESC_FiveSeven",
+    "item_rarity": "milspec"
+  },
+  "447": {
+    "name": "MAG-7 | SWAG-7",
+    "item_class": "weapon_mag7",
+    "item_name": "#SFUI_WPNHUD_MAG7",
+    "item_description": "#CSGO_WPNDESC_MAG7",
+    "item_rarity": "milspec"
+  },
+  "745": {
+    "name": "MP5-SD | Condition Zero",
+    "item_class": "weapon_mp5sd",
+    "item_name": "#SFUI_WPNHUD_MP5SD",
+    "item_description": "#CSGO_WPNDESC_MP5SD",
+    "item_rarity": "milspec"
+  },
+  "500": {
+    "name": "SCAR-20 | Enforcer",
+    "item_class": "weapon_scar20",
+    "item_name": "#SFUI_WPNHUD_SCAR20",
+    "item_description": "#CSGO_WPNDESC_SCAR20",
+    "item_rarity": "milspec"
+  },
+  "620": {
+    "name": "Tec-9 | Brother",
+    "item_class": "weapon_tec9",
+    "item_name": "#SFUI_WPNHUD_Tec9",
+    "item_description": "#CSGO_WPNDESC_Tec9",
+    "item_rarity": "milspec"
+  },
+  "404": {
+    "name": "XM1014 | VariCamo Blue",
+    "item_class": "weapon_xm1014",
+    "item_name": "#SFUI_WPNHUD_XM1014",
+    "item_description": "#CSGO_WPNDESC_XM1014",
+    "item_rarity": "milspec"
+  }
+}

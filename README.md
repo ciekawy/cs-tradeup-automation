@@ -237,6 +237,33 @@ pnpm lint
 pnpm lint:fix
 ```
 
+### Goldberg Emulator for Local Testing
+
+The project uses a Docker-based Goldberg Steam emulator for local integration testing without requiring a real Steam account:
+
+```bash
+# Build the emulator image (first time only)
+./scripts/goldberg-docker.sh build
+
+# Start the emulator
+./scripts/goldberg-docker.sh run
+
+# Run tests against the emulator
+pnpm test
+
+# Stop the emulator
+./scripts/goldberg-docker.sh stop
+```
+
+**Benefits**:
+
+- No Steam account required for testing
+- Consistent test environment across all platforms
+- No risk of account bans during development
+- Tests complete CS2 trade-up workflow
+
+📖 **For detailed Docker emulator documentation**, see [docs/DOCKER.md](docs/DOCKER.md)
+
 ### Integration Testing
 
 The project includes comprehensive E2E integration tests that validate the complete workflow:
@@ -314,6 +341,8 @@ pnpm docker:down   # Stop Docker containers
 ## 📖 Documentation
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development workflow and contribution guidelines
+- [docs/DOCKER.md](docs/DOCKER.md) - Docker-based Goldberg emulator setup and usage
+- [docs/INTEGRATION.md](docs/INTEGRATION.md) - Integration testing workflow documentation
 - [LICENSE](LICENSE) - MIT License
 - [.holicode/](/.holicode/) - HoliCode project state and specifications
 

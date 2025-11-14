@@ -38,7 +38,7 @@ export class RateLimiter {
 
   constructor(config?: RateLimiterConfig) {
     this.config = {
-      volumeFilePath: config?.volumeFilePath || '/data/volume.json',
+      volumeFilePath: config?.volumeFilePath || '.data/volume.json',
       dailyLimit: config?.dailyLimit || parseInt(process.env.MAX_DAILY_AUTH_ATTEMPTS || '10'),
       monthlyLimit:
         config?.monthlyLimit || parseInt(process.env.MAX_MONTHLY_AUTH_ATTEMPTS || '100'),

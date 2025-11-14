@@ -1,0 +1,32 @@
+# -------------------- #
+# -- Debian Base -- #
+# -------------------- #
+FROM debian:bullseye-slim
+
+# Install required dependencies for Goldberg emulator
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    g++ \
+    git \
+    libprotobuf-dev \
+    protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create working directory
+WORKDIR /goldberg
+
+# Copy Goldberg emulator fixtures from local
+# These will be mounted at runtime from tests/fixtures/
+VOLUME ["/goldberg/fixtures"]
+
+# Copy entrypoint script
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose ports for Steam emulator
+# 27017-27019: Steam server ports
+# 27015-27016: Game server ports
+EXPOSE 27015-27019
+
+ENTRYPOINT ["/entrypoint.sh"]

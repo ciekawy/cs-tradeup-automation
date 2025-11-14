@@ -42,6 +42,9 @@ build/
 # Docker persistent data (when using bind mount)
 data/
 
+# Auth session and rate limiter data
+.data/
+
 # IDE
 *.swp
 *.swo
@@ -59,3 +62,4 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+tests/fixtures/steam_settings*
