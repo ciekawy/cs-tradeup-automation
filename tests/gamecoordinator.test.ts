@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EventEmitter } from 'events';
 import { GameCoordinatorService, GameCoordinatorError } from '../src/gamecoordinator';
+import type SteamUser from 'steam-user';
 
 // Mock steam-user
 class MockSteamUser extends EventEmitter {
@@ -23,7 +24,7 @@ vi.mock('steam-user', () => ({
 vi.mock('globaloffensive', () => ({
   default: class MockGlobalOffensiveFactory extends EventEmitter {
     craft = vi.fn();
-    constructor(public steamClient: any) {
+    constructor(public steamClient: unknown) {
       super();
     }
   },
@@ -46,7 +47,7 @@ describe('GameCoordinatorService', () => {
   describe('Constructor', () => {
     it('should create service with default config', () => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
       });
 
       expect(service).toBeDefined();
@@ -59,7 +60,7 @@ describe('GameCoordinatorService', () => {
 
     it('should create service with custom config', () => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
         connectionTimeout: 10000,
         operationDelayMin: 5000,
         operationDelayMax: 10000,
@@ -71,7 +72,7 @@ describe('GameCoordinatorService', () => {
 
     it('should initialize state correctly', () => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
       });
 
       const state = service.getState();
@@ -86,7 +87,7 @@ describe('GameCoordinatorService', () => {
   describe('Connection', () => {
     beforeEach(() => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
         connectionTimeout: 5000,
       });
     });
@@ -204,7 +205,7 @@ describe('GameCoordinatorService', () => {
   describe('Disconnection', () => {
     beforeEach(() => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
         connectionTimeout: 5000,
       });
     });
@@ -267,7 +268,7 @@ describe('GameCoordinatorService', () => {
   describe('Inventory Retrieval', () => {
     beforeEach(() => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
         connectionTimeout: 5000,
         operationDelayMin: 100,
         operationDelayMax: 200,
@@ -324,7 +325,7 @@ describe('GameCoordinatorService', () => {
   describe('State Management', () => {
     beforeEach(() => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
       });
     });
 
@@ -405,7 +406,7 @@ describe('GameCoordinatorService', () => {
   describe('Error Handling', () => {
     beforeEach(() => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
         connectionTimeout: 5000,
       });
     });
@@ -439,7 +440,7 @@ describe('GameCoordinatorService', () => {
   describe('Event Handlers', () => {
     beforeEach(() => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
       });
     });
 
@@ -485,21 +486,21 @@ describe('GameCoordinatorService', () => {
   describe('Client Access', () => {
     it('should provide access to underlying GC client', () => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
       });
 
       const gcClient = service.getClient();
       expect(gcClient).toBeDefined();
       // Check it's an EventEmitter with the expected methods
-      expect(gcClient.on).toBeDefined();
-      expect(gcClient.emit).toBeDefined();
+      expect(typeof gcClient.on).toBe('function');
+      expect(typeof gcClient.emit).toBe('function');
     });
   });
 
   describe('Trade-Up Execution', () => {
     beforeEach(() => {
       service = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
         connectionTimeout: 5000,
         operationDelayMin: 100,
         operationDelayMax: 200,
@@ -543,7 +544,10 @@ describe('GameCoordinatorService', () => {
       await connectPromise;
 
       // Test with empty strings
-      const assetIds = Array(10).fill('');
+      const assetIds: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        assetIds.push('');
+      }
 
       await expect(service.executeTradeUp(assetIds)).rejects.toThrow(GameCoordinatorError);
       await expect(service.executeTradeUp(assetIds)).rejects.toThrow(/must be a non-empty string/);
@@ -688,10 +692,10 @@ describe('GameCoordinatorService', () => {
       vi.advanceTimersByTime(50);
       await connectPromise;
 
-      await expect(service.executeTradeUp('not-an-array' as any)).rejects.toThrow(
+      await expect(service.executeTradeUp('not-an-array' as unknown as string[])).rejects.toThrow(
         GameCoordinatorError
       );
-      await expect(service.executeTradeUp('not-an-array' as any)).rejects.toThrow(
+      await expect(service.executeTradeUp('not-an-array' as unknown as string[])).rejects.toThrow(
         /Asset IDs must be an array/
       );
     });

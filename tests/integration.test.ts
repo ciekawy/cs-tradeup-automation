@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EventEmitter } from 'events';
 import { GameCoordinatorService } from '../src/gamecoordinator';
+import type SteamUser from 'steam-user';
 
 /**
  * E2E Integration Tests
@@ -63,7 +64,7 @@ describe('E2E Integration Tests', () => {
       async () => {
         // Step 1: Game Coordinator Connection
         gcService = new GameCoordinatorService({
-          steamClient: mockSteamClient as any,
+          steamClient: mockSteamClient as unknown as SteamUser,
           connectionTimeout: 5000,
           operationDelayMin: 100,
           operationDelayMax: 200,
@@ -132,7 +133,7 @@ describe('E2E Integration Tests', () => {
       async () => {
         // GC Connection with delay verification
         gcService = new GameCoordinatorService({
-          steamClient: mockSteamClient as any,
+          steamClient: mockSteamClient as unknown as SteamUser,
           connectionTimeout: 5000,
           operationDelayMin: 100,
           operationDelayMax: 200,
@@ -182,7 +183,7 @@ describe('E2E Integration Tests', () => {
       async () => {
         // Test GC connection timeout
         gcService = new GameCoordinatorService({
-          steamClient: mockSteamClient as any,
+          steamClient: mockSteamClient as unknown as SteamUser,
           connectionTimeout: 1000,
         });
 
@@ -218,7 +219,7 @@ describe('E2E Integration Tests', () => {
     it('should verify delays are randomized to avoid patterns', async () => {
       // GC Service with delay range
       gcService = new GameCoordinatorService({
-        steamClient: mockSteamClient as any,
+        steamClient: mockSteamClient as unknown as SteamUser,
         connectionTimeout: 5000,
         operationDelayMin: 100,
         operationDelayMax: 200,
@@ -259,7 +260,7 @@ describe('E2E Integration Tests', () => {
 
         // 1. Connect to GC
         gcService = new GameCoordinatorService({
-          steamClient: mockSteamClient as any,
+          steamClient: mockSteamClient as unknown as SteamUser,
           operationDelayMin: 100,
           operationDelayMax: 200,
         });
