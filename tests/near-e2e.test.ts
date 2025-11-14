@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { execa, ExecaChildProcess } from 'execa';
+import { execa } from 'execa';
 import { AuthenticationService } from '../src/auth';
 import { GameCoordinatorService } from '../src/gamecoordinator';
 import SteamUser from 'steam-user';
@@ -8,7 +8,7 @@ const DOCKER_IMAGE = 'goldberg-emulator';
 const DOCKER_CONTAINER = 'goldberg-test-e2e';
 
 describe('Near-E2E Trade-Up Test (Docker)', () => {
-  let emulatorContainer: ExecaChildProcess<string> | undefined;
+  let emulatorContainer: ReturnType<typeof execa> | undefined;
   let authService: AuthenticationService;
   let gcService: GameCoordinatorService;
 
@@ -70,7 +70,7 @@ describe('Near-E2E Trade-Up Test (Docker)', () => {
   afterAll(async () => {
     // Shut down the emulator container
     console.log('Stopping emulator container...');
-    if (emulatorContainer && !emulatorContainer.killed) {
+    if (emulatorContainer && typeof emulatorContainer.kill === 'function') {
       emulatorContainer.kill('SIGTERM');
     }
 
